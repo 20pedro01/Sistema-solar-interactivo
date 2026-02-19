@@ -204,10 +204,15 @@ function isInside(x, y, obj) {
 let selectedPlanet = null;
 
 function getPos(e) {
-    if (e.touches && e.touches.length > 0) {
-        return { x: e.touches[0].clientX, y: e.touches[0].clientY };
-    }
-    return { x: e.clientX, y: e.clientY };
+    const rect = canvasElement.getBoundingClientRect();
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+    // Mapeo preciso considerando el escalado del canvas y el zoom del navegador
+    return {
+        x: (clientX - rect.left) * (canvasElement.width / rect.width),
+        y: (clientY - rect.top) * (canvasElement.height / rect.height)
+    };
 }
 
 function handleStart(e) {
@@ -232,39 +237,37 @@ function handleStart(e) {
         return;
     }
 
-    // 2. Si ya hay uno seleccionado y tocamos hacia abajo (zona del sistema solar)
-    if (selectedPlanet && pos.y > sysBox.y - 20) {
-        // Intentar colocarlo donde se tocó
+    // 2. ¿Tocamos un planeta? (Priorizar selección/cambio de planeta)
+    let touchedPlanet = null;
+    for (let i = planets.length - 1; i >= 0; i--) {
+        const p = planets[i];
+        if (p.isLocked) continue;
+        if (isInside(pos.x, pos.y, p)) {
+            touchedPlanet = p;
+            // Mover al frente
+            planets.splice(i, 1);
+            planets.push(p);
+            break;
+        }
+    }
+
+    if (touchedPlanet) {
+        // Si tocamos el mismo, lo deseleccionamos. Si es otro, cambiamos la selección.
+        selectedPlanet = (selectedPlanet === touchedPlanet) ? null : touchedPlanet;
+        return;
+    }
+
+    // 3. Si hay uno seleccionado y tocamos fuera (zona del sistema solar), intentamos colocarlo
+    if (selectedPlanet && pos.y > sysBox.y - 100) {
         selectedPlanet.x = pos.x;
         selectedPlanet.y = pos.y;
 
         checkDrop(selectedPlanet);
-
-        // Si no se bloqueó, el checkDrop lo regresó a su sitio. 
-        // En cualquier caso, deseleccionamos.
-        selectedPlanet = null;
+        selectedPlanet = null; // Siempre deseleccionar tras intento de colocar
         return;
     }
 
-    // 3. Seleccionar un planeta del inventario o relocalizar uno ya puesto (si no está bloqueado)
-    for (let i = planets.length - 1; i >= 0; i--) {
-        const p = planets[i];
-        if (p.isLocked) continue;
-
-        if (isInside(pos.x, pos.y, p)) {
-            if (selectedPlanet === p) {
-                selectedPlanet = null; // Deseleccionar
-            } else {
-                selectedPlanet = p;
-                // Mover al final para dibujar encima
-                planets.splice(i, 1);
-                planets.push(p);
-            }
-            return;
-        }
-    }
-
-    // 4. Si toca en cualquier otro lado, deseleccionar
+    // 4. Tocar en el vacío deselecciona
     selectedPlanet = null;
 }
 
@@ -282,7 +285,7 @@ function checkDrop(planet) {
             hit = isInside(planet.x, planet.y, landedZone);
         } else {
             const dist = getDistance(planet.x, planet.y, landedZone.x, landedZone.y);
-            const threshold = landedZone.r + 60; // Margen MUCHO más generoso (antes 30)
+            const threshold = landedZone.r + 100; // Umbral ultra generoso para móviles (antes 60)
             hit = dist < threshold;
         }
 
@@ -535,3 +538,5 @@ function loop() {
 }
 
 loop();
+
+
