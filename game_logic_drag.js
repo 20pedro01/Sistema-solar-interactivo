@@ -191,12 +191,15 @@ function getDistance(x1, y1, x2, y2) {
 
 function isInside(x, y, obj) {
     if (obj.type === "belt") {
-        const halfW = (obj.w || 60) * 1.5; // Hitbox de cinturón más ancha para facilitar toque
+        const halfW = (obj.w || 60) * 1.5;
         const halfH = (obj.h || 80) / 2;
         return x > (obj.x - halfW) && x < (obj.x + halfW) &&
             y > (obj.y - halfH) && y < (obj.y + halfH);
     } else {
-        return getDistance(x, y, obj.x, obj.y) < (obj.r || 20) * 2.0; // Hitbox 2.0x el radio (antes 1.5x)
+        let multiplier = 2.0;
+        if (obj.type === "saturn") multiplier = 4.0; // Saturno tiene anillos grandes
+        if (obj.r && obj.r < 20) multiplier = 3.5;  // Planetas pequeños como Mercurio
+        return getDistance(x, y, obj.x, obj.y) < (obj.r || 20) * multiplier;
     }
 }
 
@@ -224,14 +227,15 @@ function handleStart(e) {
     if (e.type === 'touchstart') e.preventDefault();
     const pos = getPos(e);
 
-    // 1. Verificar Botones
-    if (pos.x > backBtn.x && pos.x < backBtn.x + backBtn.w &&
-        pos.y > backBtn.y && pos.y < backBtn.y + backBtn.h) {
+    // 1. Verificar Botones (Área táctil ampliada para móviles)
+    const btnPadding = 20;
+    if (pos.x > backBtn.x - btnPadding && pos.x < backBtn.x + backBtn.w + btnPadding &&
+        pos.y > backBtn.y - btnPadding && pos.y < backBtn.y + backBtn.h + btnPadding) {
         window.location.href = 'index.html';
         return;
     }
-    if (pos.x > restartBtn.x && pos.x < restartBtn.x + restartBtn.w &&
-        pos.y > restartBtn.y && pos.y < restartBtn.y + restartBtn.h) {
+    if (pos.x > restartBtn.x - btnPadding && pos.x < restartBtn.x + restartBtn.w + btnPadding &&
+        pos.y > restartBtn.y - btnPadding && pos.y < restartBtn.y + restartBtn.h + btnPadding) {
         resetGame();
         selectedPlanet = null;
         return;
@@ -244,7 +248,6 @@ function handleStart(e) {
         if (p.isLocked) continue;
         if (isInside(pos.x, pos.y, p)) {
             touchedPlanet = p;
-            // Mover al frente
             planets.splice(i, 1);
             planets.push(p);
             break;
@@ -252,18 +255,17 @@ function handleStart(e) {
     }
 
     if (touchedPlanet) {
-        // Si tocamos el mismo, lo deseleccionamos. Si es otro, cambiamos la selección.
         selectedPlanet = (selectedPlanet === touchedPlanet) ? null : touchedPlanet;
         return;
     }
 
     // 3. Si hay uno seleccionado y tocamos fuera (zona del sistema solar), intentamos colocarlo
-    if (selectedPlanet && pos.y > sysBox.y - 100) {
+    if (selectedPlanet && pos.y > sysBox.y - 150) {
         selectedPlanet.x = pos.x;
         selectedPlanet.y = pos.y;
 
         checkDrop(selectedPlanet);
-        selectedPlanet = null; // Siempre deseleccionar tras intento de colocar
+        selectedPlanet = null;
         return;
     }
 
@@ -538,5 +540,3 @@ function loop() {
 }
 
 loop();
-
-
