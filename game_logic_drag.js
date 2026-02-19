@@ -191,12 +191,12 @@ function getDistance(x1, y1, x2, y2) {
 
 function isInside(x, y, obj) {
     if (obj.type === "belt") {
-        const halfW = (obj.w || 40) / 2;
-        const halfH = (obj.h || 40) / 2;
+        const halfW = (obj.w || 60) * 1.5; // Hitbox de cinturón más ancha para facilitar toque
+        const halfH = (obj.h || 80) / 2;
         return x > (obj.x - halfW) && x < (obj.x + halfW) &&
             y > (obj.y - halfH) && y < (obj.y + halfH);
     } else {
-        return getDistance(x, y, obj.x, obj.y) < (obj.r || 20) * 1.5; // Hitbox un poco más grande
+        return getDistance(x, y, obj.x, obj.y) < (obj.r || 20) * 2.0; // Hitbox 2.0x el radio (antes 1.5x)
     }
 }
 
@@ -282,7 +282,7 @@ function checkDrop(planet) {
             hit = isInside(planet.x, planet.y, landedZone);
         } else {
             const dist = getDistance(planet.x, planet.y, landedZone.x, landedZone.y);
-            const threshold = landedZone.r + 30; // Margen generoso
+            const threshold = landedZone.r + 60; // Margen MUCHO más generoso (antes 30)
             hit = dist < threshold;
         }
 
