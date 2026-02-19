@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manual de usuario</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            color: white;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            padding: 40px;
+            border-radius: 15px;
+            max-width: 800px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            color: #a4dded;
+            text-align: center;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 10px;
+        }
+
+        h2 {
+            color: #d1b3ff;
+            margin-top: 30px;
+        }
+
+        p {
+            line-height: 1.6;
+            color: #ddd;
+        }
+
+        ul {
+            line-height: 1.6;
+            color: #ddd;
+        }
+
+        li {
+            margin-bottom: 10px;
+        }
+
+        .highlight {
+            color: #4ade80;
+            font-weight: bold;
+        }
+
+        .highlight-cam {
+            color: #f472b6;
+            font-weight: bold;
+        }
+
+        .back-btn {
+            display: block;
+            margin: 40px auto 0;
+            padding: 12px 40px;
+            background: #302b63;
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 25px;
+            cursor: pointer;
+            transition: 0.3s;
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .back-btn:hover {
+            background: #4b4585;
+            transform: scale(1.05);
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+
+    <div class="container">
+        <button class="back-btn" onclick="location.href='index.html'">Volver al Inicio</button>
+
+        <h1>Manual de usuario</h1>
+
+        <p>Bienvenido al Sistema Solar interactivo. El objetivo del juego es arrastrar cada planeta desde el inventario
+            superior hasta su órbita correcta alrededor del Sol.</p>
+
+        <h2>👆 Modo táctil (móvil/PC)</h2>
+        <p>Este modo es ideal para pantallas táctiles o uso con ratón.</p>
+        <ul>
+            <li><strong>Seleccionar:</strong> Toca o haz clic en un planeta de la caja superior.</li>
+            <li><strong>Arrastrar:</strong> Mantén presionado y desliza el planeta hacia su órbita correspondiente.</li>
+            <li><strong>Soltar:</strong> Libera el planeta sobre la órbita correcta (línea punteada). Si es correcto, el
+                planeta se bloqueará en su lugar.</li>
+        </ul>
+
+        <h2>📷 Modo cámara (solo PC)</h2>
+        <p>Este modo utiliza Inteligencia Artificial para detectar tus manos a través de la webcam.</p>
+        <ul>
+            <li><strong>Mano detectada:</strong> verás un cursor en pantalla que sigue la punta de tu dedo índice.</li>
+            <li><strong>Agarre (pinza):</strong> Junta tus dedos <strong>índice y pulgar</strong> (haciendo una pinza)
+                sobre un planeta para agarrarlo.</li>
+            <li><strong>Arrastrar:</strong> Mueve tu mano mientras mantienes la pinza cerrada.</li>
+            <li><strong>Soltar:</strong> Separa tus dedos para soltar el planeta en su lugar.</li>
+        </ul>
+        <p><em>Nota: Asegúrate de estar en un lugar con buena iluminación, que no haya una fuente de luz justo detrás de
+                tí y dar los permisos de la cámara al abrir la página.</em></p>
+        <p>Aquí puedes ver un video con ejemplos de uso: <a href="https://youtu.be/0_52_1_1_1_1">Clic aquí</a></p>
+
+    </div>
+
+    <footer style="margin-top: auto; padding: 20px; text-align: center; width: 100%; pointer-events: none;">
+        <div style="pointer-events: auto;">
+            <p style="margin: 0; font-size: 1rem; color: rgba(255,255,255,0.7);">Pedro Cauich 🐧 &copy;</p>
+            <div style="margin-top: 10px; font-size: 1.5rem;">
+                <a href="https://www.instagram.com/pedro_cauichpat/" target="_blank"
+                    style="color: white; margin: 0 10px; transition: color 0.3s;"
+                    onmouseover="this.style.color='#E1306C'" onmouseout="this.style.color='white'"><i
+                        class="fab fa-instagram"></i></a>
+                <a href="https://www.tiktok.com/@pedro_cauich" target="_blank"
+                    style="color: white; margin: 0 10px; transition: color 0.3s;"
+                    onmouseover="this.style.color='#00f2ea'" onmouseout="this.style.color='white'"><i
+                        class="fab fa-tiktok"></i></a>
+                <a href="https://github.com/20pedro01/" target="_blank"
+                    style="color: white; margin: 0 10px; transition: color 0.3s;"
+                    onmouseover="this.style.color='#6e5494'" onmouseout="this.style.color='white'"><i
+                        class="fab fa-github"></i></a>
+            </div>
+        </div>
+    </footer>
+
+</body>
+
+</html>

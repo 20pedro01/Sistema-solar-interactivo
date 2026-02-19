@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acerca de</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            color: white;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .content {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 40px;
+            border-radius: 20px;
+            max-width: 600px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+        }
+
+        h1 {
+            color: #a4dded;
+            margin-bottom: 2rem;
+            text-shadow: 0 0 10px #bf2fcb;
+        }
+
+        h2 {
+            color: #d1b3ff;
+            margin-top: 2rem;
+            font-size: 1.5rem;
+        }
+
+        p {
+            line-height: 1.6;
+            color: #ddd;
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+        }
+
+        .dev-info {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+
+        strong {
+            color: #4ade80;
+        }
+
+        .back-btn {
+            margin-top: 30px;
+            padding: 12px 40px;
+            background: transparent;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            color: white;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: 0.3s;
+            font-size: 1.1rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .back-btn:hover {
+            background: white;
+            color: #302b63;
+            border-color: white;
+            box-shadow: 0 0 15px white;
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+    <div class="content">
+        <h1>Acerca del desarrollador</h1>
+
+        <div class="dev-info">
+            <h2>Desarrollado por:</h2>
+            <p><strong>Pedro Cauich 👨‍💻</strong></p>
+            <p>Programador neurodivergente apasionado por la tecnología y la astronomía.</p>
+            <p>Este proyecto educativo fue creado para facilitar el aprendizaje del sistema solar mediante tecnologías
+                interactivas modernas como la visión por computadora y gráficos web.</p>
+        </div>
+
+        <h2>Per aspera ad astra</h2>
+
+        <button class="back-btn" onclick="location.href='index.html'">Volver al Inicio</button>
+    </div>
+
+    <footer style="margin-top: auto; padding: 20px; text-align: center; width: 100%; pointer-events: none;">
+        <div style="pointer-events: auto;">
+            <p style="margin: 0; font-size: 1rem; color: rgba(255,255,255,0.7);">Pedro Cauich 🐧 &copy;</p>
+            <div style="margin-top: 10px; font-size: 1.5rem;">
+                <a href="https://www.instagram.com/pedro_cauichpat/" target="_blank"
+                    style="color: white; margin: 0 10px; transition: color 0.3s;"
+                    onmouseover="this.style.color='#E1306C'" onmouseout="this.style.color='white'"><i
+                        class="fab fa-instagram"></i></a>
+                <a href="https://www.tiktok.com/@pedro_cauich" target="_blank"
+                    style="color: white; margin: 0 10px; transition: color 0.3s;"
+                    onmouseover="this.style.color='#00f2ea'" onmouseout="this.style.color='white'"><i
+                        class="fab fa-tiktok"></i></a>
+                <a href="https://github.com/20pedro01/" target="_blank"
+                    style="color: white; margin: 0 10px; transition: color 0.3s;"
+                    onmouseover="this.style.color='#6e5494'" onmouseout="this.style.color='white'"><i
+                        class="fab fa-github"></i></a>
+            </div>
+        </div>
+    </footer>
+</body>
+
+</html>

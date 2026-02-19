@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema Solar Interactivo</title>
+    <style>
+        body { margin: 0; background-color: #0a0a1e; overflow: hidden; color: white; user-select: none; }
+        
+        #game-container { position: relative; width: 100vw; height: 100vh; }
+        
+        video { 
+            position: absolute; top: 0; left: 0; 
+            width: 100%; height: 100%; object-fit: cover; 
+            opacity: 0.5; transform: scaleX(-1); pointer-events: none;
+        }
+
+        #canvas-overlay {
+            position: absolute; top: 0; left: 0;
+            width: 100%; height: 100%;
+        }
+
+        .hud {
+            position: absolute; top: 20px; left: 20px;
+            font-family: 'Arial', sans-serif; font-size: 1.5rem;
+            background: rgba(0,0,0,0.5); padding: 10px 20px; border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <!-- Feed de cámara oculto pero necesario para procesar -->
+        <video id="input-video" playsinline></video>
+        <!-- Lienzo donde dibujaremos todo -->
+        <canvas id="canvas-overlay"></canvas>
+        <div class="hud" id="status-text">Cargando módulos de IA...</div>
+    </div>
+
+    <!-- Cargar MediaPipe Hands versión JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+
+    <!-- Nuestra Lógica del Juego -->
+    <script src="game_logic.js"></script>
+</body>
+</html>

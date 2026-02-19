@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema Solar Web</title>
+    <style>
+        html,
+        body {
+            scrollbar-width: none;
+            /* Firefox */
+            -ms-overflow-style: none;
+            /* IE y Edge */
+        }
+
+        /* Ocultar en Chrome, Safari y Opera */
+        ::-webkit-scrollbar {
+            display: none;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            overflow-y: auto;
+            zoom: 0.95;
+        }
+
+        /* Fondo Estelar */
+        .stars {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            background-image:
+                radial-gradient(2px 2px at 20px 30px, #eee, rgba(0, 0, 0, 0)),
+                radial-gradient(2px 2px at 40px 70px, #fff, rgba(0, 0, 0, 0)),
+                radial-gradient(2px 2px at 50px 160px, #ddd, rgba(0, 0, 0, 0)),
+                radial-gradient(2px 2px at 90px 40px, #fff, rgba(0, 0, 0, 0)),
+                radial-gradient(2px 2px at 130px 80px, #fff, rgba(0, 0, 0, 0)),
+                radial-gradient(2px 2px at 160px 120px, #ddd, rgba(0, 0, 0, 0));
+            background-repeat: repeat;
+            background-size: 200px 200px;
+            animation: twinkle 4s infinite alternate;
+        }
+
+        @keyframes twinkle {
+            0% {
+                opacity: 0.5;
+                transform: scale(1);
+            }
+
+            100% {
+                opacity: 1;
+                transform: scale(1.1);
+            }
+        }
+
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 3rem;
+            text-shadow: 0 0 10px #bf2fcb, 0 0 20px #4d0b68;
+            z-index: 10;
+            text-align: center;
+            padding: 0 20px;
+        }
+
+        .container {
+            display: flex;
+            gap: 3rem;
+            z-index: 10;
+            flex-wrap: wrap;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 2rem;
+            width: 280px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .card:hover {
+            transform: translateY(-10px) scale(1.05);
+            background: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+
+        .card h2 {
+            margin: 0 0 1rem 0;
+            font-size: 1.8rem;
+            color: #e0e0ff;
+        }
+
+        .card p {
+            font-size: 1rem;
+            color: #ccc;
+            line-height: 1.5;
+        }
+
+        .card .icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .about-btn {
+            margin-top: 4rem;
+            padding: 12px 40px;
+            background: transparent;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            color: white;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            transition: 0.3s;
+            z-index: 10;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .about-btn:hover {
+            background: white;
+            color: #302b63;
+            border-color: white;
+            box-shadow: 0 0 15px white;
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+    <div class="stars"></div>
+
+    <main
+        style="flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; width: 100%;">
+        <h1>Sistema Solar Web</h1>
+
+        <div class="container">
+            <!-- Card 1: Touch -->
+            <div class="card" onclick="location.href='drag.html'">
+                <div class="icon">👆</div>
+                <h2>Modo táctil</h2>
+                <p>Arrastra los planetas con tu dedo o mouse para ordenarlos.</p>
+                <p><small style="color: #4ade80;">Ideal para teléfonos</small></p>
+            </div>
+
+            <!-- Card 2: Camera -->
+            <div class="card" onclick="checkCameraSupport()">
+                <div class="icon">📷</div>
+                <h2>Modo cámara</h2>
+                <p>Usa tus manos frente a la cámara web para mover los planetas.</p>
+                <p><small style="color: #f472b6;">Ideal para PC</small></p>
+            </div>
+        </div>
+
+        <div style="margin-top: 2rem; display: flex; gap: 20px;">
+            <button class="about-btn" style="margin-top: 0;" onclick="location.href='manual.html'">Manual de
+                Usuario</button>
+            <button class="about-btn" style="margin-top: 0;" onclick="location.href='about.html'">Acerca de</button>
+        </div>
+
+        <footer style="margin-top: auto; padding: 20px; text-align: center; width: 100%;">
+            <div>
+                <p style="margin: 0; font-size: 1rem; color: rgba(255,255,255,0.7);">Pedro Cauich 🐧 &copy;</p>
+                <div style="margin-top: 10px; font-size: 1.5rem;">
+                    <a href="https://www.instagram.com/pedro_cauichpat/" target="_blank"
+                        style="color: white; margin: 0 10px; transition: color 0.3s;"
+                        onmouseover="this.style.color='#E1306C'" onmouseout="this.style.color='white'"><i
+                            class="fab fa-instagram"></i></a>
+                    <a href="https://www.tiktok.com/@pedro_cauich" target="_blank"
+                        style="color: white; margin: 0 10px; transition: color 0.3s;"
+                        onmouseover="this.style.color='#00f2ea'" onmouseout="this.style.color='white'"><i
+                            class="fab fa-tiktok"></i></a>
+                    <a href="https://github.com/20pedro01/" target="_blank"
+                        style="color: white; margin: 0 10px; transition: color 0.3s;"
+                        onmouseover="this.style.color='#6e5494'" onmouseout="this.style.color='white'"><i
+                            class="fab fa-github"></i></a>
+                </div>
+            </div>
+        </footer>
+
+        <script>
+            function checkCameraSupport() {
+                const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+                if (isMobile) {
+                    // Mensaje de advertencia personalizado
+                    alert("⚠️ ¡Atención!\n\nEste modo funciona mediante la cámara y requiere buen rendimiento.\n\nEstá optimizado para COMPUTADORAS.\n\nPor favor, ábrelo desde una PC para la mejor experiencia.");
+                } else {
+                    location.href = 'camera.html';
+                }
+            }
+        </script>
+</body>
+
+</html>
