@@ -146,6 +146,99 @@
             border-color: white;
             box-shadow: 0 0 15px white;
         }
+
+        /* Ajustes para Móviles y Tablets (Alta resolución inclusive) */
+        @media (max-width: 1180px) or (orientation: portrait) {
+            body {
+                zoom: 1;
+                /* Resetear zoom en móviles para evitar problemas de escala */
+                justify-content: flex-start;
+                overflow: hidden;
+            }
+
+            main {
+                justify-content: space-evenly !important;
+                /* Distribuye elementos en toda la pantalla verticalmente */
+                height: 100vh;
+                padding: 10px 0;
+            }
+
+            h1 {
+                font-size: 3rem;
+                /* Título aún más grande */
+                margin-bottom: 0.5rem;
+                margin-top: 10px;
+            }
+
+            .container {
+                flex-direction: column;
+                gap: 1.5rem;
+                padding: 10px;
+                width: 100%;
+                align-items: center;
+                flex: 1;
+                /* Aumentar espacio para el contenedor de tarjetas */
+            }
+
+            .card {
+                width: 92%;
+                max-width: 500px;
+                padding: 3rem 2rem;
+                flex: 3;
+                /* Que ocupen la mayor parte del espacio vertical */
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                border: 3px solid rgba(255, 255, 255, 0.4);
+            }
+
+            .card h2 {
+                font-size: 2.5rem;
+                /* Títulos de tarjetas muy grandes */
+                margin-bottom: 1rem;
+            }
+
+            .card .icon {
+                font-size: 5.5rem;
+                /* Iconos masivos */
+                margin-bottom: 1rem;
+            }
+
+            .card p {
+                font-size: 1.3rem;
+                /* Texto descriptivo más grande */
+            }
+
+            .about-btn {
+                padding: 15px 35px;
+                font-size: 1.2rem;
+                /* Botones más prominentes */
+                margin-top: 10px !important;
+                border-width: 3px;
+            }
+
+            #btn-container {
+                margin-top: 10px !important;
+                gap: 20px !important;
+                width: 100%;
+                justify-content: center;
+            }
+
+            footer {
+                margin-top: 10px !important;
+                padding: 15px !important;
+            }
+
+            footer p {
+                font-size: 1.2rem !important;
+                /* Texto de autor más grande */
+            }
+
+            footer div div {
+                font-size: 2rem !important;
+                /* Iconos de redes sociales más grandes */
+            }
+        }
     </style>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
@@ -175,7 +268,7 @@
             </div>
         </div>
 
-        <div style="margin-top: 2rem; display: flex; gap: 20px;">
+        <div id="btn-container" style="margin-top: 2rem; display: flex; gap: 20px;">
             <button class="about-btn" style="margin-top: 0;" onclick="location.href='manual.html'">Manual de
                 Usuario</button>
             <button class="about-btn" style="margin-top: 0;" onclick="location.href='about.html'">Acerca de</button>
@@ -203,16 +296,19 @@
 
         <script>
             function checkCameraSupport() {
-                const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+                // Detección por User Agent O por ancho de pantalla (para teléfonos de alta resolución)
+                const isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+                const isSmallScreen = window.innerWidth <= 1180;
+                const isMobile = isMobileUA || isSmallScreen;
 
                 if (isMobile) {
-                    // Mensaje de advertencia personalizado
-                    alert("⚠️ ¡Atención!\n\nEste modo funciona mediante la cámara y requiere buen rendimiento.\n\nEstá optimizado para COMPUTADORAS.\n\nPor favor, ábrelo desde una PC para la mejor experiencia.");
+                    // Mensaje de advertencia que permite continuar
+                    const proceeding = confirm("⚠️ ¡Atención!\n\nEste modo funciona mediante la cámara y requiere buen rendimiento.\n\nEstá optimizado para COMPUTADORAS.\n\n¿Deseas intentar abrirlo de todas formas?");
+                    if (proceeding) {
+                        location.href = 'camera.html';
+                    }
                 } else {
                     location.href = 'camera.html';
                 }
             }
         </script>
-</body>
-
-</html>
