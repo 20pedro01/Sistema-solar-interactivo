@@ -382,6 +382,14 @@ function drawGameElements() {
         canvasCtx.font = "bold 16px Arial";
         canvasCtx.fillText("Volver a la página anterior", backBtn.x + backBtn.w / 2, backBtn.y + backBtn.h / 2);
 
+        // Dibujar botón reiniciar
+        canvasCtx.fillStyle = "#4444ff";
+        canvasCtx.beginPath();
+        canvasCtx.roundRect(restartBtn.x, restartBtn.y, restartBtn.w, restartBtn.h, 10);
+        canvasCtx.fill();
+        canvasCtx.fillStyle = "white";
+        canvasCtx.fillText("REINICIAR", restartBtn.x + restartBtn.w / 2, restartBtn.y + restartBtn.h / 2);
+
         canvasCtx.restore();
         return; // Detener el resto del dibujo
     }
@@ -590,6 +598,11 @@ canvasElement.addEventListener('touchstart', (e) => {
     if (mouseX > backBtn.x && mouseX < backBtn.x + backBtn.w &&
         mouseY > backBtn.y && mouseY < backBtn.y + backBtn.h) {
         window.location.href = 'index.html';
+    }
+
+    if (mouseX > restartBtn.x && mouseX < restartBtn.x + restartBtn.w &&
+        mouseY > restartBtn.y && mouseY < restartBtn.y + restartBtn.h) {
+        resetGame();
     }
 }, { passive: false });
 
