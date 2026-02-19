@@ -201,9 +201,7 @@ function isInside(x, y, obj) {
 }
 
 // --- EVENTOS MOUSE / TOUCH ---
-let isDragging = false;
-let draggedPlanet = null;
-let dragOffset = { x: 0, y: 0 };
+let selectedPlanet = null;
 
 function getPos(e) {
     if (e.touches && e.touches.length > 0) {
@@ -214,78 +212,65 @@ function getPos(e) {
 
 function handleStart(e) {
     if (isGameWon) {
-        // Cerrar mensajes de felicitación al hacer clic
         isGameWon = false;
         return;
     }
 
-    // Evitar scroll y comportamiento default solo si es touch
     if (e.type === 'touchstart') e.preventDefault();
-
     const pos = getPos(e);
 
     // 1. Verificar Botones
-    // Volver
     if (pos.x > backBtn.x && pos.x < backBtn.x + backBtn.w &&
         pos.y > backBtn.y && pos.y < backBtn.y + backBtn.h) {
         window.location.href = 'index.html';
         return;
     }
-    // Reiniciar
     if (pos.x > restartBtn.x && pos.x < restartBtn.x + restartBtn.w &&
         pos.y > restartBtn.y && pos.y < restartBtn.y + restartBtn.h) {
         resetGame();
+        selectedPlanet = null;
         return;
     }
 
-    // 2. Iterar al revés para agarrar el de arriba
+    // 2. Si ya hay uno seleccionado y tocamos hacia abajo (zona del sistema solar)
+    if (selectedPlanet && pos.y > sysBox.y - 20) {
+        // Intentar colocarlo donde se tocó
+        selectedPlanet.x = pos.x;
+        selectedPlanet.y = pos.y;
+
+        checkDrop(selectedPlanet);
+
+        // Si no se bloqueó, el checkDrop lo regresó a su sitio. 
+        // En cualquier caso, deseleccionamos.
+        selectedPlanet = null;
+        return;
+    }
+
+    // 3. Seleccionar un planeta del inventario o relocalizar uno ya puesto (si no está bloqueado)
     for (let i = planets.length - 1; i >= 0; i--) {
         const p = planets[i];
         if (p.isLocked) continue;
 
         if (isInside(pos.x, pos.y, p)) {
-            draggedPlanet = p;
-            isDragging = true;
-            dragOffset.x = pos.x - p.x;
-            dragOffset.y = pos.y - p.y;
-
-            // Mover al final para dibujar encima
-            planets.splice(i, 1);
-            planets.push(p);
-
-
+            if (selectedPlanet === p) {
+                selectedPlanet = null; // Deseleccionar
+            } else {
+                selectedPlanet = p;
+                // Mover al final para dibujar encima
+                planets.splice(i, 1);
+                planets.push(p);
+            }
             return;
         }
     }
-}
 
-function handleMove(e) {
-    if (!isDragging || !draggedPlanet) return;
-    if (e.type === 'touchmove') e.preventDefault();
-
-    const pos = getPos(e);
-    draggedPlanet.x = pos.x - dragOffset.x;
-    draggedPlanet.y = pos.y - dragOffset.y;
-}
-
-function handleEnd(e) {
-    if (!isDragging || !draggedPlanet) return;
-
-    checkDrop(draggedPlanet);
-
-    isDragging = false;
-    draggedPlanet = null;
-
+    // 4. Si toca en cualquier otro lado, deseleccionar
+    selectedPlanet = null;
 }
 
 canvasElement.addEventListener('mousedown', handleStart);
 canvasElement.addEventListener('touchstart', handleStart, { passive: false });
-
-canvasElement.addEventListener('mousemove', handleMove);
-canvasElement.addEventListener('touchmove', handleMove, { passive: false });
-
-window.addEventListener('mouseup', handleEnd); // Window para no perder el drop si sale del canvas
-window.addEventListener('touchend', handleEnd);
+// Se eliminan handleMove y handleEnd ya que la interacción ahora es por toques directos.
 
 // --- LÓGICA DE DROP ---
 function checkDrop(planet) {
@@ -407,7 +392,7 @@ function drawGameElements() {
     // Texto Instrucción (Abajo del botón)
     canvasCtx.fillStyle = "rgba(200, 200, 255, 0.9)";
     canvasCtx.font = "bold 20px Arial";
-    canvasCtx.fillText("Arrastra los elementos dentro de la caja a su posición correcta", canvasElement.width / 2, invBox.y - 15);
+    canvasCtx.fillText("Toca un elemento y luego su posición correcta", canvasElement.width / 2, invBox.y - 15);
 
     // Caja Inventario
     canvasCtx.strokeStyle = "rgba(0, 255, 255, 0.3)";
@@ -416,6 +401,7 @@ function drawGameElements() {
     canvasCtx.restore();
 
     zones.forEach(zone => {
+        // ... (resto del código de zonas igual)
         canvasCtx.save();
         canvasCtx.strokeStyle = zone.baseColor;
         canvasCtx.lineWidth = 2;
@@ -479,10 +465,10 @@ function drawGameElements() {
 
     planets.forEach(planet => {
         canvasCtx.save();
-        if (planet.isDragging) {
-            canvasCtx.shadowColor = "white"; canvasCtx.shadowBlur = 15;
+        if (planet === selectedPlanet) {
+            canvasCtx.shadowColor = "cyan"; canvasCtx.shadowBlur = 20;
             canvasCtx.translate(planet.x, planet.y);
-            canvasCtx.scale(1.1, 1.1);
+            canvasCtx.scale(1.2, 1.2);
             canvasCtx.translate(-planet.x, -planet.y);
         }
 
