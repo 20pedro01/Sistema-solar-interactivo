@@ -92,9 +92,9 @@ function initGameElements() {
     // 3. CAJA SISTEMA (Panel inferior)
     sysBox = {
         x: sideMargin,
-        y: invBox.y + invBox.h + (isPC ? 60 : 25),
+        y: invBox.y + invBox.h + (isPC ? 60 : 15), // Reducido de 25 a 15 en móvil
         w: width - (sideMargin * 2),
-        h: height - (invBox.y + invBox.h + (isPC ? 100 : 45))
+        h: height - (invBox.y + invBox.h + (isPC ? 100 : 35)) // Ajustado de 45 a 35 para dar más espacio
     };
 
     // --- 4. ZONAS DESTINO (Dentro de sysBox) ---
