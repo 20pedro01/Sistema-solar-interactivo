@@ -392,29 +392,42 @@ hands.setOptions({
 });
 hands.onResults(onResults);
 
-// Cámara trasera con constraints explícitos
+// Cámara trasera con constraints ultra explícitos
 async function startCamera() {
     try {
-        const stream = await navigator.mediaDevices.getUserMedia({
+        const constraints = {
             video: {
-                facingMode: 'environment',
-                width: { ideal: 640 },
-                height: { ideal: 480 }
+                facingMode: { exact: "environment" },
+                width: { ideal: 1280 },
+                height: { ideal: 720 }
             }
-        });
+        };
+
+        // Si falla con 'exact', intentamos sin exactitud por si el navegador es restrictivo
+        let stream;
+        try {
+            stream = await navigator.mediaDevices.getUserMedia(constraints);
+        } catch (e) {
+            console.log("Reintentando sin 'exact' para facingMode...");
+            stream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: "environment" }
+            });
+        }
+
         videoElement.srcObject = stream;
-        videoElement.play();
+        await videoElement.play();
         
         const camera = new Camera(videoElement, {
             onFrame: async () => {
                 await hands.send({ image: videoElement });
             },
-            width: 640,
-            height: 480
+            width: 1280,
+            height: 720
         });
         camera.start();
     } catch (err) {
-        statusText.innerText = "Error: Cámara no accesible";
+        console.error("Error al acceder a la cámara:", err);
+        statusText.innerText = "Error: Cámara trasera no accesible";
     }
 }
 
