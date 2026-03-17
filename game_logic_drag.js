@@ -100,7 +100,7 @@ function initGameElements() {
         x: sideMargin, 
         y: padding,
         w: width - (sideMargin * 2),
-        h: isPC ? height * 0.18 : Math.min(height * 0.30, 140) // Un poco más alto para separar del texto
+        h: isPC ? height * 0.18 : Math.min(height * 0.25, 110) // Reducido para móviles
     };
 
     // 3. CAJA SISTEMA (Panel inferior)
@@ -108,7 +108,7 @@ function initGameElements() {
         x: sideMargin,
         y: invBox.y + invBox.h + (isPC ? 40 : 5), // Reducido para dar más aire interno
         w: width - (sideMargin * 2),
-        h: height - (invBox.y + invBox.h + (isPC ? 80 : 25))
+        h: height - (invBox.y + invBox.h + (isPC ? 80 : 55)) // Aumentado margen inferior para móviles
     };
 
     // --- 4. ZONAS DESTINO (Dentro de sysBox) ---
@@ -139,7 +139,7 @@ function initGameElements() {
             originalR: data.r 
         };
 
-        const sizeFactor = isPC ? 1.2 : 0.85; 
+        const sizeFactor = isPC ? 1.2 : 0.70; // ESCALA GLOBAL REDUCIDA PARA MÓVIL (de 0.85 a 0.70)
         if (data.type === "star") zoneObj.r = Math.min(70 * sizeFactor, sysBox.h * 0.4);
         else if (data.type === "belt") {
             zoneObj.w = Math.min(60 * sizeFactor, sysBox.w * 0.05);
@@ -172,8 +172,8 @@ function initGameElements() {
         let posX = invBox.x + (col * colW) + (colW / 2);
         let posY = invBox.y + (rowH / 2);
 
-        // Aumentamos la escala para que se vean mucho más grandes
-        const invScale = isPC ? 0.8 : 0.65; 
+        // Escala reducida para que quepan bien en una fila
+        const invScale = isPC ? 0.8 : 0.52; 
         let planetObj = {
             id: data.id,
             name: data.name,
