@@ -70,46 +70,41 @@ function initGameElements() {
     const width = window.innerWidth;
     const height = window.innerHeight;
 
-    // Margen seguro (10% a cada lado para facilitar interacción)
-    const marginX = width * 0.10;
+    // 1. BOTONES (Esquinas superiores)
+    backBtn.w = 50; backBtn.h = 50;
+    backBtn.x = 20; backBtn.y = 10;
 
-    // 1. DEFINIR CAJAS
-    // Caja Inventario: Parte superior
+    restartBtn.w = 50; restartBtn.h = 50;
+    restartBtn.x = width - 70; restartBtn.y = 10;
+
+    // 2. CAJA INVENTARIO (Panel superior)
     invBox = {
-        x: marginX,
-        y: height * 0.12, // Espacio para el texto arriba
-        w: width - (marginX * 2),
-        h: height * 0.30
+        x: 80, 
+        y: 10,
+        w: width - 160,
+        h: Math.min(height * 0.25, 120)
     };
 
-    // BOTÓN VOLVER (Arriba)
-    backBtn.w = 240;
-    backBtn.h = 30;
-    backBtn.x = width / 2 - backBtn.w / 2;
-    backBtn.y = height * 0.02;
-
-    // BOTÓN REINICIAR (Debajo de la caja de inventario)
-    restartBtn.x = width / 2 - restartBtn.w / 2;
-    restartBtn.y = invBox.y + invBox.h + (height * 0.02); // 2% del alto de separación
-
-    // Caja Sistema Solar: Parte inferior
+    // 3. CAJA SISTEMA (Panel inferior)
     sysBox = {
-        x: marginX,
-        y: height * 0.50,
-        w: width - (marginX * 2),
-        h: height * 0.45
+        x: 20,
+        y: invBox.y + invBox.h + 30,
+        w: width - 40,
+        h: height - (invBox.y + invBox.h + 40)
     };
 
-    // --- 2. ZONAS DESTINO (Dentro de sysBox) ---
+    // --- 4. ZONAS DESTINO (Dentro de sysBox) ---
     const sysCenterY = sysBox.y + (sysBox.h / 2);
-    // Distribución: Sol a la izquierda, luego gaps variables
-    const positionsPct = [0.10, 0.20, 0.27, 0.34, 0.41, 0.50, 0.63, 0.77, 0.89, 0.96];
+    // Distribución horizontal proporcional
+    const positionsPct = [0.08, 0.18, 0.26, 0.33, 0.40, 0.50, 0.65, 0.78, 0.89, 0.96];
 
     solarSystemData.forEach((data, index) => {
         let distinctX = sysBox.x + (sysBox.w * positionsPct[index]);
         let distinctY = sysCenterY;
-        if (data.type !== "belt" && data.type !== "star") {
-            const zigzag = height * 0.08;
+        
+        // Zigzag solo si hay altura suficiente
+        if (data.type !== "belt" && data.type !== "star" && sysBox.h > 250) {
+            const zigzag = sysBox.h * 0.15;
             distinctY = (index % 2 !== 0) ? sysCenterY + zigzag : sysCenterY - zigzag;
         }
 
@@ -123,47 +118,39 @@ function initGameElements() {
             type: data.type
         };
 
-        const scale = 1.0;
-        if (data.type === "star") zoneObj.r = 60;
+        if (data.type === "star") zoneObj.r = Math.min(60, sysBox.h * 0.3);
         else if (data.type === "belt") {
-            zoneObj.w = 60;
+            zoneObj.w = Math.min(60, sysBox.w * 0.05);
             zoneObj.h = sysBox.h * 0.8;
-            for (let i = 0; i < 40; i++) {
+            for (let i = 0; i < 30; i++) {
                 asteroidParticles.push({
-                    x: distinctX + (Math.random() - 0.5) * 40,
-                    y: sysCenterY + (Math.random() - 0.5) * (sysBox.h * 0.8),
-                    r: Math.random() * 3 + 1
+                    x: distinctX + (Math.random() - 0.5) * zoneObj.w,
+                    y: sysCenterY + (Math.random() - 0.5) * zoneObj.h,
+                    r: Math.random() * 2 + 1
                 });
             }
         } else if (data.type === "saturn") {
-            zoneObj.r = 35;
-            zoneObj.ringR = 35 * 2.2;
+            zoneObj.r = Math.min(35, sysBox.h * 0.15);
+            zoneObj.ringR = zoneObj.r * 2.2;
         } else {
-            zoneObj.r = data.r + 5;
+            zoneObj.r = Math.min(data.r + 5, sysBox.h * 0.15);
         }
 
         zones.push(zoneObj);
     });
 
-    // --- 3. INVENTARIO (Dentro de invBox) ---
+    // --- 5. INVENTARIO (Dentro de invBox) ---
     let shuffledData = [...solarSystemData].sort(() => Math.random() - 0.5);
-    shuffledData.forEach((data) => {
-        let halfW, halfH;
-        if (data.type === "belt") {
-            halfW = 20; halfH = 40;
-        } else {
-            let safeR = data.r;
-            if (data.type === "saturn") safeR = 50;
-            halfW = safeR; halfH = safeR;
-        }
+    shuffledData.forEach((data, i) => {
+        // Calcular posición en rejilla para evitar solapamientos iniciales
+        const cols = 5;
+        const colW = invBox.w / cols;
+        const rowH = invBox.h / 2;
+        const col = i % cols;
+        const row = Math.floor(i / cols);
 
-        const minX = invBox.x + halfW;
-        const maxX = invBox.x + invBox.w - halfW;
-        const minY = invBox.y + halfH;
-        const maxY = invBox.y + invBox.h - halfH;
-
-        let posX = minX + Math.random() * Math.max(0, maxX - minX);
-        let posY = minY + Math.random() * Math.max(0, maxY - minY);
+        let posX = invBox.x + (col * colW) + (colW / 2);
+        let posY = invBox.y + (row * rowH) + (rowH / 2);
 
         let planetObj = {
             id: data.id,
@@ -174,11 +161,13 @@ function initGameElements() {
             type: data.type,
             isDragging: false,
             isLocked: false,
-            r: data.r, w: data.w, h: data.h,
-            originalX: posX, originalY: posY
+            r: data.r * 0.7, // Escala reducida en inventario
+            w: data.w * 0.7,
+            h: data.h * 0.7,
+            originalX: posX, 
+            originalY: posY
         };
 
-        if (data.type === "belt") { planetObj.w = 40; planetObj.h = 80; }
         planets.push(planetObj);
     });
 }
@@ -226,24 +215,29 @@ function getPos(e) {
 }
 
 function handleStart(e) {
+    // Intentar bloquear orientación en el primer toque (requiere gesto del usuario)
+    if (screen.orientation && screen.orientation.lock) {
+        screen.orientation.lock('landscape').catch(() => {});
+    }
+
     if (isGameWon) {
         isGameWon = false;
         resetGame();
         return;
     }
 
-    if (e.type === 'touchstart') e.preventDefault();
+    // No prevenir default aquí para permitir clics en botones, pero sí para el canvas después
     const pos = getPos(e);
 
-    // 1. Verificar Botones
-    const btnPadding = 20;
-    if (pos.x > backBtn.x - btnPadding && pos.x < backBtn.x + backBtn.w + btnPadding &&
-        pos.y > backBtn.y - btnPadding && pos.y < backBtn.y + backBtn.h + btnPadding) {
+    // 1. Verificar Botones (Área activa circular)
+    const distBack = getDistance(pos.x, pos.y, backBtn.x + 25, backBtn.y + 25);
+    if (distBack < 40) {
         window.location.href = 'index.html';
         return;
     }
-    if (pos.x > restartBtn.x - btnPadding && pos.x < restartBtn.x + restartBtn.w + btnPadding &&
-        pos.y > restartBtn.y - btnPadding && pos.y < restartBtn.y + restartBtn.h + btnPadding) {
+
+    const distRestart = getDistance(pos.x, pos.y, restartBtn.x + 25, restartBtn.y + 25);
+    if (distRestart < 40) {
         resetGame();
         return;
     }
@@ -253,6 +247,7 @@ function handleStart(e) {
         const p = planets[i];
         if (p.isLocked) continue;
         if (isInside(pos.x, pos.y, p)) {
+            if (e.type === 'touchstart') e.preventDefault(); // Ahora sí prevenimos para evitar scroll
             selectedPlanet = p;
             selectedPlanet.isDragging = true;
             dragOffset.x = pos.x - p.x;
@@ -379,42 +374,50 @@ function resetGame() {
 function drawGameElements() {
     canvasCtx.save();
 
-    // BOTÓN VOLVER (Arriba)
-    canvasCtx.fillStyle = "#ff4444";
+    // BOTÓN VOLVER (Círculo rojo con flecha)
+    canvasCtx.fillStyle = "rgba(255, 68, 68, 0.8)";
     canvasCtx.beginPath();
-    canvasCtx.roundRect(backBtn.x, backBtn.y, backBtn.w, backBtn.h, 10);
+    canvasCtx.arc(backBtn.x + 25, backBtn.y + 25, 25, 0, Math.PI * 2);
     canvasCtx.fill();
     canvasCtx.strokeStyle = "white";
     canvasCtx.lineWidth = 2;
     canvasCtx.stroke();
+    
+    // Icono Flecha Volver
+    canvasCtx.fillStyle = "white";
+    canvasCtx.beginPath();
+    canvasCtx.moveTo(backBtn.x + 15, backBtn.y + 25);
+    canvasCtx.lineTo(backBtn.x + 35, backBtn.y + 15);
+    canvasCtx.lineTo(backBtn.x + 35, backBtn.y + 35);
+    canvasCtx.closePath();
+    canvasCtx.fill();
 
+    // BOTÓN REINICIAR (Círculo azul con flecha circular)
+    canvasCtx.fillStyle = "rgba(68, 68, 255, 0.8)";
+    canvasCtx.beginPath();
+    canvasCtx.arc(restartBtn.x + 25, restartBtn.y + 25, 25, 0, Math.PI * 2);
+    canvasCtx.fill();
+    canvasCtx.strokeStyle = "white";
+    canvasCtx.lineWidth = 2;
+    canvasCtx.stroke();
+    
+    // Icono Reiniciar (Círculo incompleto)
+    canvasCtx.strokeStyle = "white";
+    canvasCtx.beginPath();
+    canvasCtx.arc(restartBtn.x + 25, restartBtn.y + 25, 12, 0.2, Math.PI * 1.8);
+    canvasCtx.stroke();
+
+    // Texto Instrucción 
     canvasCtx.fillStyle = "white";
     canvasCtx.font = "bold 16px Arial";
     canvasCtx.textAlign = "center";
-    canvasCtx.textBaseline = "middle";
-    canvasCtx.fillText("Volver a la página anterior", backBtn.x + backBtn.w / 2, backBtn.y + backBtn.h / 2);
+    canvasCtx.fillText("Arrastra los planetas a su posición", canvasElement.width / 2, 25);
 
-    // BOTÓN REINICIAR (Debajo del inventario)
-    canvasCtx.fillStyle = "#4444ff";
-    canvasCtx.beginPath();
-    canvasCtx.roundRect(restartBtn.x, restartBtn.y, restartBtn.w, restartBtn.h, 10);
-    canvasCtx.fill();
-    canvasCtx.strokeStyle = "white";
-    canvasCtx.lineWidth = 2;
-    canvasCtx.stroke();
-
-    canvasCtx.fillStyle = "white";
-    canvasCtx.fillText("REINICIAR", restartBtn.x + restartBtn.w / 2, restartBtn.y + restartBtn.h / 2);
-
-
-    // Texto Instrucción (Abajo del botón)
-    canvasCtx.fillStyle = "rgba(200, 200, 255, 0.9)";
-    canvasCtx.font = "bold 20px Arial";
-    canvasCtx.fillText("Arrastra los planetas a su posición correcta", canvasElement.width / 2, invBox.y - 15);
-
-    // Caja Inventario
-    canvasCtx.strokeStyle = "rgba(0, 255, 255, 0.3)";
+    // Caja Inventario (Borde sutil)
+    canvasCtx.strokeStyle = "rgba(0, 255, 255, 0.2)";
+    canvasCtx.setLineDash([5, 5]);
     canvasCtx.strokeRect(invBox.x, invBox.y, invBox.w, invBox.h);
+    canvasCtx.setLineDash([]);
 
     canvasCtx.restore();
 
