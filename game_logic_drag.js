@@ -164,16 +164,16 @@ function initGameElements() {
     // --- 5. INVENTARIO (Dentro de invBox) ---
     let shuffledData = [...solarSystemData].sort(() => Math.random() - 0.5);
     shuffledData.forEach((data, i) => {
-        const cols = 5;
+        const cols = 10; // Una sola fila de 10 elementos
         const colW = invBox.w / cols;
-        const rowH = invBox.h / 2;
+        const rowH = invBox.h; // Ocupan todo el alto disponible
         const col = i % cols;
-        const row = Math.floor(i / cols);
 
         let posX = invBox.x + (col * colW) + (colW / 2);
-        let posY = invBox.y + (row * rowH) + (rowH / 2);
+        let posY = invBox.y + (rowH / 2);
 
-        const invScale = isPC ? 0.6 : 0.45;
+        // Aumentamos la escala para que se vean mucho más grandes
+        const invScale = isPC ? 0.8 : 0.65; 
         let planetObj = {
             id: data.id,
             name: data.name,
@@ -190,8 +190,8 @@ function initGameElements() {
             originalX: posX, 
             originalY: posY
         };
-        // Saturno en inventario necesita ser un poco más pequeño para no chocar
-        if (planetObj.id === "saturno") planetObj.r *= 0.8;
+        // Saturno en inventario ajustado para el nuevo tamaño
+        if (planetObj.id === "saturno") planetObj.r *= 0.75;
 
         planets.push(planetObj);
     });
