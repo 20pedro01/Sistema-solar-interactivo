@@ -89,7 +89,7 @@ function initGameElements() {
     
     if (!isPC) {
         fsBtn.x = width - padding - 50; 
-        fsBtn.y = height - padding - 55;
+        fsBtn.y = height - padding - 95;
     } else {
         fsBtn.x = -1000;
     }
