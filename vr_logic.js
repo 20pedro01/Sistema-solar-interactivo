@@ -76,17 +76,20 @@ function initGameElements() {
         h: Math.min(vh * 0.20, 100)
     };
 
+    const inFS = !!document.fullscreenElement;
     sysBox = {
         x: sideMargin,
         y: invBox.y + invBox.h + 5,
         w: vw - (sideMargin * 2),
-        h: vh - (invBox.y + invBox.h + 60)
+        h: vh - (invBox.y + invBox.h + (inFS ? 40 : 80)) // Más margen si no está en FS
     };
 
     // Botones en posiciones virtuales
     backBtn.x = padding; backBtn.y = padding;
     restartBtn.x = vw - padding - 50; restartBtn.y = padding;
-    fsBtn.x = vw - padding - 50; fsBtn.y = vh - padding - 60;
+    // Subido de 60 a 90 (o más si no hay FS) para visibilidad
+    fsBtn.x = vw - padding - 50; 
+    fsBtn.y = inFS ? vh - padding - 50 : vh - padding - 95; 
 
     // Distribución horizontal (Escalada para VR)
     const positionsPct = [0.05, 0.14, 0.21, 0.28, 0.35, 0.46, 0.56, 0.76, 0.88, 0.98];
@@ -112,7 +115,7 @@ function initGameElements() {
             originalR: data.r
         };
 
-        const sizeFactor = 0.55; // Mucho más pequeño para que quepa en el campo visual del visor
+        const sizeFactor = 0.45; // Reducido de 0.55 a 0.45 para compactar
         if (data.type === "star") zoneObj.r = Math.min(70 * sizeFactor, sysBox.h * 0.4);
         else if (data.type === "belt") {
             zoneObj.w = Math.min(60 * sizeFactor, sysBox.w * 0.05);
@@ -371,6 +374,28 @@ function toggleFullscreen() {
         document.exitFullscreen();
     }
 }
+
+// Soporte táctil para el botón de pantalla completa en VR
+canvasElement.addEventListener('touchstart', (e) => {
+    const rect = canvasElement.getBoundingClientRect();
+    const touch = e.touches[0];
+    const tx = (touch.clientX - rect.left) * (canvasElement.width / rect.width);
+    const ty = (touch.clientY - rect.top) * (canvasElement.height / rect.height);
+    
+    // El toque puede ser en cualquiera de las dos pantallas (izquierda o derecha)
+    const vw = canvasElement.width / 2;
+    const clickX = tx > vw ? tx - vw : tx; // Normalizar a coordenadas de un solo ojo
+    
+    if (getDist(clickX, ty, fsBtn.x + 25, fsBtn.y + 25) < 40) {
+        toggleFullscreen();
+    }
+    if (getDist(clickX, ty, restartBtn.x + 25, restartBtn.y + 25) < 40) {
+        initGameElements();
+    }
+    if (getDist(clickX, ty, backBtn.x + 25, backBtn.y + 25) < 40) {
+        window.location.href = 'index.html';
+    }
+}, { passive: false });
 
 // --- SET UP ---
 window.addEventListener('resize', () => {
