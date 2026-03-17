@@ -546,12 +546,14 @@ function drawGameElements() {
 
         if (zone.id === "mercurio") {
             ly = zone.y + labelOffset + 4; // Mucho más junto
+        } else if (zone.id === "venus" || zone.id === "urano") {
+            ly = zone.y - labelOffset - 8; // Siempre ARRIBA (con un margen de 8px)
         } else if (zone.id === "tierra") {
-            ly = (relY > 0.5) ? zone.y - labelOffset + 2 : zone.y + labelOffset + 5; // Más pegado
+            ly = (relY > 0.5) ? zone.y - labelOffset + 2 : zone.y + labelOffset + 5; 
         } else if (zone.type === "saturn") {
-            ly = (relY > 0.5) ? zone.y - labelOffset + 5 : zone.y + labelOffset + 4; // Más pegado (ajustado por sus anillos)
+            ly = (relY > 0.5) ? zone.y - labelOffset + 5 : zone.y + labelOffset + 4;
         } else if (zone.type === "belt") {
-            ly = zone.y + (zone.h / 2) - 10; // Bajado (de -30 a -10) para que esté más cerca del borde inferior del cinturón
+            ly = zone.y + (zone.h / 2) - 10;
             canvasCtx.font = isPCGlobal ? "bold 18px Arial" : "bold 15px Arial";
         } else {
             ly = (relY > 0.5) ? zone.y - labelOffset - 5 : zone.y + labelOffset + 15;
