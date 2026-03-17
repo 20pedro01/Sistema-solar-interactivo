@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Sistema Solar VR / AR</title>
+    <style>
+        body { margin: 0; background-color: #000; overflow: hidden; color: white; user-select: none; }
+        
+        #game-container { position: relative; width: 100vw; height: 100vh; display: flex; }
+        
+        video { 
+            position: absolute; top: 0; left: 0; 
+            width: 100%; height: 100%; object-fit: cover; 
+            opacity: 0.6; pointer-events: none;
+            /* No invertimos la cámara trasera */
+        }
+
+        canvas {
+            position: absolute; top: 0; left: 0;
+            width: 100%; height: 100%;
+        }
+
+        #vr-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            display: flex; pointer-events: none; z-index: 100;
+        }
+        .v-line {
+            position: absolute; left: 50%; top: 0; width: 2px; height: 100%;
+            background: rgba(255,255,255,0.2);
+        }
+
+        .hud-vr {
+            position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+            font-family: Arial, sans-serif; font-size: 1rem;
+            background: rgba(0,0,0,0.6); padding: 8px 15px; border-radius: 20px;
+            white-space: nowrap; transition: opacity 0.5s;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <!-- Cámara trasera -->
+        <video id="input-video" playsinline></video>
+        <!-- Lienzo único que dividiremos en dos en JS -->
+        <canvas id="canvas-overlay"></canvas>
+        
+        <div id="vr-overlay">
+            <div class="v-line"></div>
+            <div class="hud-vr" id="status-text">Iniciando Realidad Aumentada...</div>
+        </div>
+    </div>
+
+    <!-- MediaPipe -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+
+    <!-- Lógica VR -->
+    <script src="vr_logic.js"></script>
+</body>
+</html>
