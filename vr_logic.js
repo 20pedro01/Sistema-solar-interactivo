@@ -9,8 +9,9 @@ let planets = [];
 let zones = [];
 let invBox = {}, sysBox = {};
 let isFullscreen = false;
-let worldW = 0; // Ancho del mundo virtual (panorámico)
-let cameraYaw = 0; // Desplazamiento horizontal por rotación del teléfono
+let worldW = 0, worldH = 0; // Dimensiones del mundo virtual
+let cameraYaw = 0; // Desplazamiento horizontal (Alpha)
+let cameraPitch = 0; // Desplazamiento vertical (Beta/Gama)
 
 // Sistema de LOG para depuración en pantalla
 function log(msg) {
@@ -18,14 +19,18 @@ function log(msg) {
     if (statusText) statusText.innerText = msg;
 }
 
-// Escuchar orientación del dispositivo para el "Giroscopio"
+// Escuchar orientación del dispositivo
 window.addEventListener('deviceorientation', (e) => {
     if (e.alpha !== null) {
-        // Usamos el ángulo alpha (brújula/giro) para desplazar el mundo
-        // e.alpha va de 0 a 360. 
-        // Vamos a mapearlo para que el centro sea suave.
-        const sensitivity = 5; // Pixeles por grado
+        const sensitivity = 5; 
         cameraYaw = (e.alpha % 360) * sensitivity;
+        
+        // Beta es la inclinación hacia adelante/atrás (rango aprox -180 a 180)
+        // Usamos un factor para desplazar verticalmente
+        if (e.beta !== null) {
+            // Ajustamos para que 0 (horizontal) sea el centro
+            cameraPitch = (e.beta - 45) * sensitivity * 1.5; 
+        }
     }
 }, true);
 
@@ -71,8 +76,9 @@ function initGameElements() {
     const vw = totalW / 2; 
     const vh = totalH;
 
-    // Mundo Panorámico (Damos mucho más espacio a lo ancho)
-    worldW = vw * 3.5; 
+    // Mundo Esférico (Panorámico H y V)
+    worldW = vw * 4; 
+    worldH = vh * 3; // Mucho más alto para permitir mirar arriba y abajo
 
     canvasElement.width = totalW;
     canvasElement.height = totalH;
@@ -81,45 +87,40 @@ function initGameElements() {
     zones = [];
     isGameWon = false;
 
-    const padding = 20;
     const sideMargin = vw * 0.1;
 
-    // Caja de Inventario (Arriba, también ancha)
+    // Caja de Inventario (Flotando arriba en el "cielo" virtual)
     invBox = {
         x: sideMargin,
-        y: padding + 20,
+        y: worldH * 0.2, 
         w: worldW - (sideMargin * 2),
-        h: Math.min(vh * 0.15, 80)
+        h: 150
     };
 
-    // Caja de Sistema (Abajo, panorámica)
-    const inFS = !!document.fullscreenElement;
+    // Caja de Sistema (Centro del mundo)
     sysBox = {
         x: sideMargin,
-        y: invBox.y + invBox.h + 20,
+        y: worldH * 0.4,
         w: worldW - (sideMargin * 2),
-        h: vh - (invBox.y + invBox.h + (inFS ? 60 : 100))
+        h: worldH * 0.5
     };
 
-    // Botones (Estos los mantendremos fijos en la pantalla en drawScene)
-    backBtn.w = 50; backBtn.h = 50;
-    restartBtn.w = 50; restartBtn.h = 50;
-    fsBtn.w = 50; fsBtn.h = 50;
-
-    // Distribución en SEMICÍRCULO ENVOLVENTE
+    // Distribución en ESFERA ENVOLVENTE (Usa ancho y alto)
     const count = solarSystemData.length;
     const sysCenterX = sysBox.x + (sysBox.w / 2);
-    const sysCenterY = vh * 0.7; // Bajado para dar sensación de cercanía
+    const sysCenterY = sysBox.y + (sysBox.h / 2);
     
-    // Radio del semicírculo (Ajustado para que se sientan a tu alrededor)
-    const radiusX = sysBox.w / 2.5;
-    const radiusY = vh * 0.45;
+    const radiusX = sysBox.w * 0.4;
+    const radiusY = sysBox.h * 0.35;
 
     solarSystemData.forEach((data, index) => {
-        const angle = Math.PI * (0.05 + (index / (count - 1)) * 0.9);
+        // Ángulo horizontal
+        const angleH = Math.PI * (0.05 + (index / (count - 1)) * 0.9);
+        // Desviación vertical (algunos más arriba, otros más abajo)
+        const vShift = (index % 3 - 1) * (sysBox.h * 0.15);
         
-        let distinctX = sysCenterX - Math.cos(angle) * radiusX;
-        let distinctY = sysCenterY - Math.sin(angle) * radiusY;
+        let distinctX = sysCenterX - Math.cos(angleH) * radiusX;
+        let distinctY = sysCenterY - Math.sin(angleH) * radiusY + vShift;
 
         let zoneObj = {
             id: data.id,
@@ -132,13 +133,13 @@ function initGameElements() {
             originalR: data.r
         };
 
-        const sizeFactor = 1.6; // AUMENTADO de 0.6 para que se vean CERCA
-        if (data.type === "star") zoneObj.r = 120;
+        const sizeFactor = 1.6;
+        if (data.type === "star") zoneObj.r = 130;
         else if (data.type === "belt") {
-            zoneObj.w = 100;
-            zoneObj.h = 240;
+            zoneObj.w = 110;
+            zoneObj.h = 260;
         } else if (data.type === "saturn") {
-            zoneObj.r = 80;
+            zoneObj.r = 90;
         } else {
             zoneObj.r = (data.r + 5) * sizeFactor;
         }
@@ -146,14 +147,14 @@ function initGameElements() {
         zones.push(zoneObj);
     });
 
-    // Inventario (Distribuido – PLANETAS GRANDES)
+    // Inventario (Distribuido a lo alto y ancho)
     let shuffledData = [...solarSystemData].sort(() => Math.random() - 0.5);
     shuffledData.forEach((data, i) => {
         const colW = invBox.w / 11;
         let posX = invBox.x + (i * colW) + (colW / 2);
         let posY = invBox.y + (invBox.h / 2);
 
-        const invScale = 0.95; // AUMENTADO de 0.35
+        const invScale = 0.95;
         let planetObj = {
             id: data.id, name: data.name, color: data.color,
             x: posX, y: posY, type: data.type,
@@ -174,9 +175,9 @@ function drawScene(eye) {
     const vw = totalW / 2;
     const offset = eye === 'right' ? vw : 0;
     
-    // El desplazamiento del mundo depende de la rotación (alpha)
-    // El mundo central está en worldW / 2
+    // El desplazamiento del mundo depende de la rotación
     const currentWorldX = (worldW / 2) - (vw / 2) + cameraYaw;
+    const currentWorldY = (worldH / 2) - (vh / 2) + cameraPitch;
 
     canvasCtx.save();
     // Clip para no dibujar en la otra mitad
@@ -184,9 +185,9 @@ function drawScene(eye) {
     canvasCtx.rect(offset, 0, vw, vh);
     canvasCtx.clip();
     
-    // Capa de Mundo (Mueve el sistema solar)
+    // Capa de Mundo (Mueve el sistema solar en X e Y)
     canvasCtx.save();
-    canvasCtx.translate(offset - currentWorldX, 0);
+    canvasCtx.translate(offset - currentWorldX, -currentWorldY);
 
     // 1. Inventario Border
     canvasCtx.strokeStyle = "rgba(0, 255, 255, 0.1)";
@@ -333,8 +334,9 @@ function updateGameLogic(pinching, wasPinching) {
 
     // Traducir el centro de la pantalla a coordenadas del MUNDO panorámico
     const currentWorldXOffset = (worldW / 2) - (vw / 2) + cameraYaw;
+    const currentWorldYOffset = (worldH / 2) - (vh / 2) + cameraPitch;
     const centerX = screenCenterX + currentWorldXOffset;
-    const centerY = screenCenterY;
+    const centerY = screenCenterY + currentWorldYOffset;
 
     // 1. Detectar qué hay bajo la retícula (Gaze Target en el mundo)
     if (!selectedPlanet) {
