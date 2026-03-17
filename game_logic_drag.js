@@ -23,6 +23,13 @@ let isGameWon = false;
 let rocketX = 0, rocketY = 0, rocketAngle = 0;
 let asteroidParticles = [];
 
+// Intentar bloquear orientación en móviles
+if (screen.orientation && screen.orientation.lock) {
+    screen.orientation.lock('landscape').catch(e => {
+        console.log("No se pudo bloquear la orientación:", e);
+    });
+}
+
 // BOTONES (Definidos globalmente para uso en eventos y dibujado)
 const backBtn = { x: 20, y: 20, w: 200, h: 40 };
 const restartBtn = { x: 0, y: 0, w: 200, h: 50 }; // Posición calculada en init
@@ -205,13 +212,13 @@ function isInside(x, y, obj) {
 
 // --- EVENTOS MOUSE / TOUCH ---
 let selectedPlanet = null;
+let dragOffset = { x: 0, y: 0 };
 
 function getPos(e) {
     const rect = canvasElement.getBoundingClientRect();
     const clientX = e.touches ? e.touches[0].clientX : e.clientX;
     const clientY = e.touches ? e.touches[0].clientY : e.clientY;
 
-    // Mapeo preciso considerando el escalado del canvas y el zoom del navegador
     return {
         x: (clientX - rect.left) * (canvasElement.width / rect.width),
         y: (clientY - rect.top) * (canvasElement.height / rect.height)
@@ -221,13 +228,14 @@ function getPos(e) {
 function handleStart(e) {
     if (isGameWon) {
         isGameWon = false;
+        resetGame();
         return;
     }
 
     if (e.type === 'touchstart') e.preventDefault();
     const pos = getPos(e);
 
-    // 1. Verificar Botones (Área táctil ampliada para móviles)
+    // 1. Verificar Botones
     const btnPadding = 20;
     if (pos.x > backBtn.x - btnPadding && pos.x < backBtn.x + backBtn.w + btnPadding &&
         pos.y > backBtn.y - btnPadding && pos.y < backBtn.y + backBtn.h + btnPadding) {
@@ -237,45 +245,50 @@ function handleStart(e) {
     if (pos.x > restartBtn.x - btnPadding && pos.x < restartBtn.x + restartBtn.w + btnPadding &&
         pos.y > restartBtn.y - btnPadding && pos.y < restartBtn.y + restartBtn.h + btnPadding) {
         resetGame();
-        selectedPlanet = null;
         return;
     }
 
-    // 2. ¿Tocamos un planeta? (Priorizar selección/cambio de planeta)
-    let touchedPlanet = null;
+    // 2. ¿Tocamos un planeta?
     for (let i = planets.length - 1; i >= 0; i--) {
         const p = planets[i];
         if (p.isLocked) continue;
         if (isInside(pos.x, pos.y, p)) {
-            touchedPlanet = p;
+            selectedPlanet = p;
+            selectedPlanet.isDragging = true;
+            dragOffset.x = pos.x - p.x;
+            dragOffset.y = pos.y - p.y;
+            // Traer al frente
             planets.splice(i, 1);
             planets.push(p);
-            break;
+            return;
         }
     }
+}
 
-    if (touchedPlanet) {
-        selectedPlanet = (selectedPlanet === touchedPlanet) ? null : touchedPlanet;
-        return;
-    }
+function handleMove(e) {
+    if (!selectedPlanet || !selectedPlanet.isDragging) return;
+    if (e.type === 'touchmove') e.preventDefault();
 
-    // 3. Si hay uno seleccionado y tocamos fuera (zona del sistema solar), intentamos colocarlo
-    if (selectedPlanet && pos.y > sysBox.y - 150) {
-        selectedPlanet.x = pos.x;
-        selectedPlanet.y = pos.y;
+    const pos = getPos(e);
+    selectedPlanet.x = pos.x - dragOffset.x;
+    selectedPlanet.y = pos.y - dragOffset.y;
+}
 
-        checkDrop(selectedPlanet);
-        selectedPlanet = null;
-        return;
-    }
-
-    // 4. Tocar en el vacío deselecciona
+function handleEnd(e) {
+    if (!selectedPlanet || !selectedPlanet.isDragging) return;
+    
+    selectedPlanet.isDragging = false;
+    checkDrop(selectedPlanet);
     selectedPlanet = null;
 }
 
 canvasElement.addEventListener('mousedown', handleStart);
+canvasElement.addEventListener('mousemove', handleMove);
+canvasElement.addEventListener('mouseup', handleEnd);
+
 canvasElement.addEventListener('touchstart', handleStart, { passive: false });
-// Se eliminan handleMove y handleEnd ya que la interacción ahora es por toques directos.
+canvasElement.addEventListener('touchmove', handleMove, { passive: false });
+canvasElement.addEventListener('touchend', handleEnd, { passive: false });
 
 // --- LÓGICA DE DROP ---
 function checkDrop(planet) {
@@ -397,7 +410,7 @@ function drawGameElements() {
     // Texto Instrucción (Abajo del botón)
     canvasCtx.fillStyle = "rgba(200, 200, 255, 0.9)";
     canvasCtx.font = "bold 20px Arial";
-    canvasCtx.fillText("Toca un elemento y luego su posición correcta", canvasElement.width / 2, invBox.y - 15);
+    canvasCtx.fillText("Arrastra los planetas a su posición correcta", canvasElement.width / 2, invBox.y - 15);
 
     // Caja Inventario
     canvasCtx.strokeStyle = "rgba(0, 255, 255, 0.3)";
