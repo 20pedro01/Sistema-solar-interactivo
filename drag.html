@@ -30,19 +30,53 @@
             /* Important for touch devices to prevent scrolling while dragging */
         }
 
-        .hud {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            font-family: 'Arial', sans-serif;
-            font-size: 1.5rem;
-            background: rgba(0, 0, 0, 0.5);
-            padding: 10px 20px;
-            border-radius: 10px;
-            pointer-events: none;
+        /* Orientation warning */
+        #orientation-warning {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(15, 12, 41, 0.95);
+            z-index: 9999;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 20px;
         }
 
-        /* Add a star background for visual interest */
+        @media screen and (orientation: portrait) and (max-width: 1024px) {
+            #orientation-warning {
+                display: flex;
+            }
+        }
+
+        #orientation-warning i {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            color: #ffcc00;
+            animation: rotate 2s infinite ease-in-out;
+        }
+
+        @keyframes rotate {
+            0% { transform: rotate(0deg); }
+            50% { transform: rotate(90deg); }
+            100% { transform: rotate(0deg); }
+        }
+
+        #orientation-warning h2 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        #orientation-warning p {
+            font-size: 1.2rem;
+            opacity: 0.8;
+        }
+
+        /* Star background */
         .stars {
             position: absolute;
             top: 0;
@@ -58,9 +92,15 @@
             z-index: -1;
         }
     </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 
 <body>
+    <div id="orientation-warning">
+        <i class="fas fa-mobile-alt"></i>
+        <h2>Por favor, gira tu dispositivo</h2>
+        <p>Para una mejor experiencia, usa el modo horizontal.</p>
+    </div>
     <div class="stars"></div>
     <div id="game-container">
         <canvas id="canvas-overlay"></canvas>
