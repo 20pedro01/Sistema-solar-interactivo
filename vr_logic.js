@@ -433,9 +433,10 @@ hands.setOptions({
 });
 hands.onResults(onResults);
 
-// Cámara trasera con constraints ultra explícitos
+// Cámara trasera con constraints ultra explícitos y mejor manejo de errores
 async function startCamera() {
     try {
+        statusText.innerText = "Solicitando acceso a cámara...";
         const constraints = {
             video: {
                 facingMode: { ideal: "environment" },
@@ -444,30 +445,43 @@ async function startCamera() {
             }
         };
 
-        // Solicitar el stream manualmente para tener control TOTAL
         const stream = await navigator.mediaDevices.getUserMedia(constraints);
         videoElement.srcObject = stream;
         
-        // Esperar a que el video esté listo para reproducirse
+        statusText.innerText = "Configurando stream...";
+        // Esperar a que el video esté listo de forma más robusta
         await new Promise((resolve) => {
-            videoElement.onloadedmetadata = () => {
-                videoElement.play().then(resolve);
-            };
+            if (videoElement.readyState >= 2) { // HAVE_CURRENT_DATA
+                resolve();
+            } else {
+                videoElement.onloadedmetadata = () => resolve();
+            }
         });
 
-        // Loop manual de procesamiento (reemplaza al helper 'Camera' de MediaPipe)
-        // Esto evita que MediaPipe reinicie la cámara con sus valores por defecto
+        await videoElement.play();
+        statusText.innerText = "Iniciando IA de detección...";
+
+        // Iniciar procesamiento
         async function process() {
             if (!videoElement.paused && !videoElement.ended) {
-                await hands.send({ image: videoElement });
+                try {
+                    await hands.send({ image: videoElement });
+                } catch (e) {
+                    console.warn("Hand send error:", e);
+                }
             }
             requestAnimationFrame(process);
         }
         process();
+        
+        // El HUD se ocultará en onResults cuando detecte algo
+        statusText.innerText = "Apunta a un planeta para empezar";
+        setTimeout(() => { statusText.style.opacity = "0"; }, 3000);
 
     } catch (err) {
-        console.error("Error al acceder a la cámara:", err);
-        statusText.innerText = "Error: Cámara trasera no accesible";
+        console.error("Error crítico AR/VR:", err);
+        statusText.innerText = "Error: " + (err.name === 'NotAllowedError' ? "Permiso de cámara denegado" : err.message);
+        statusText.style.opacity = "1";
     }
 }
 
