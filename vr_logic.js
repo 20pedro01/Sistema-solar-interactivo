@@ -8,10 +8,13 @@ const statusText = document.getElementById('status-text');
 let planets = [];
 let zones = [];
 let invBox = {}, sysBox = {};
-let isGameWon = false;
-let rocketX = 0, rocketY = 0, rocketAngle = 0;
-let asteroidParticles = [];
 let isFullscreen = false;
+
+// Sistema de LOG para depuración en pantalla
+function log(msg) {
+    console.log("VR-LOG:", msg);
+    if (statusText) statusText.innerText = msg;
+}
 
 // Estado de manos / Gaze
 let IS_PINCHING = false;
@@ -158,10 +161,17 @@ function initGameElements() {
 
 // --- LÓGICA DE DIBUJO ---
 function drawScene(eye) {
-    const vw = canvasElement.width / 2;
+    const totalW = canvasElement.width;
+    const vh = canvasElement.height;
+    const vw = totalW / 2;
     const offset = eye === 'right' ? vw : 0;
     
     canvasCtx.save();
+    // Clip para no dibujar en la otra mitad
+    canvasCtx.beginPath();
+    canvasCtx.rect(offset, 0, vw, vh);
+    canvasCtx.clip();
+    
     canvasCtx.translate(offset, 0);
 
     // 1. Botones
@@ -413,76 +423,83 @@ canvasElement.addEventListener('touchstart', (e) => {
     }
 }, { passive: false });
 
-// --- SET UP ---
-window.addEventListener('resize', () => {
+// --- INICIO DE PROCESOS ---
+async function startApp() {
+    log("Iniciando aplicación...");
     initGameElements();
-});
+    loop();
 
-initGameElements();
-loop();
+    // 1. Iniciar Cámara primero (es lo más rápido y da feedback visual)
+    await startCamera();
 
-// Iniciar MediaPipe y Cámara
-const hands = new Hands({
-    locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
-});
-hands.setOptions({
-    maxNumHands: 1,
-    modelComplexity: 1,
-    minDetectionConfidence: 0.5,
-    minTrackingConfidence: 0.5
-});
-hands.onResults(onResults);
+    // 2. Iniciar IA (después de que la cámara ruede)
+    try {
+        log("Cargando IA de manos...");
+        const hands = new Hands({
+            locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
+        });
 
-// Cámara trasera con constraints ultra explícitos y mejor manejo de errores
+        hands.setOptions({
+            maxNumHands: 1,
+            modelComplexity: 1,
+            minDetectionConfidence: 0.5,
+            minTrackingConfidence: 0.5
+        });
+
+        hands.onResults(onResults);
+
+        // Vincular el procesamiento del video con la IA
+        window.processIA = async (video) => {
+            await hands.send({ image: video });
+        };
+        log("IA Lista. Apunta y usa gestos.");
+        setTimeout(() => { if(statusText) statusText.style.opacity = "0"; }, 4000);
+
+    } catch (e) {
+        log("Error IA: Usa toque manual");
+        console.error(e);
+    }
+}
+
+// Reemplazar el loop anterior y el startCamera suelto
 async function startCamera() {
     try {
-        statusText.innerText = "Solicitando acceso a cámara...";
+        log("Accediendo a cámara trasera...");
         const constraints = {
             video: {
                 facingMode: { ideal: "environment" },
-                width: { ideal: 1280 },
-                height: { ideal: 720 }
+                width: { ideal: 640 }, // Menor resolución para mayor fluidez en móvil
+                height: { ideal: 480 }
             }
         };
 
         const stream = await navigator.mediaDevices.getUserMedia(constraints);
         videoElement.srcObject = stream;
         
-        statusText.innerText = "Configurando stream...";
-        // Esperar a que el video esté listo de forma más robusta
         await new Promise((resolve) => {
-            if (videoElement.readyState >= 2) { // HAVE_CURRENT_DATA
-                resolve();
-            } else {
-                videoElement.onloadedmetadata = () => resolve();
-            }
+            videoElement.onloadedmetadata = () => resolve();
         });
 
         await videoElement.play();
-        statusText.innerText = "Iniciando IA de detección...";
+        log("Cámara activa. Cargando IA...");
 
-        // Iniciar procesamiento
-        async function process() {
+        async function processLoop() {
             if (!videoElement.paused && !videoElement.ended) {
-                try {
-                    await hands.send({ image: videoElement });
-                } catch (e) {
-                    console.warn("Hand send error:", e);
+                if (window.processIA) {
+                    try {
+                        await window.processIA(videoElement);
+                    } catch (e) {}
                 }
             }
-            requestAnimationFrame(process);
+            requestAnimationFrame(processLoop);
         }
-        process();
-        
-        // El HUD se ocultará en onResults cuando detecte algo
-        statusText.innerText = "Apunta a un planeta para empezar";
-        setTimeout(() => { statusText.style.opacity = "0"; }, 3000);
+        processLoop();
 
     } catch (err) {
-        console.error("Error crítico AR/VR:", err);
-        statusText.innerText = "Error: " + (err.name === 'NotAllowedError' ? "Permiso de cámara denegado" : err.message);
-        statusText.style.opacity = "1";
+        log("Cámara no disponible. Usa el visor.");
+        console.error("Camera Error:", err);
     }
 }
 
-startCamera();
+// Ejecutar todo
+startApp();
