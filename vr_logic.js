@@ -22,14 +22,14 @@ function log(msg) {
 // Escuchar orientación del dispositivo
 window.addEventListener('deviceorientation', (e) => {
     if (e.alpha !== null) {
-        const sensitivity = 5; 
-        cameraYaw = (e.alpha % 360) * sensitivity;
+        const sensitivityH = 6; 
+        const sensitivityV = 4;
+        cameraYaw = (e.alpha % 360) * sensitivityH;
         
-        // Beta es la inclinación hacia adelante/atrás (rango aprox -180 a 180)
-        // Usamos un factor para desplazar verticalmente
         if (e.beta !== null) {
-            // Ajustamos para que 0 (horizontal) sea el centro
-            cameraPitch = (e.beta - 45) * sensitivity * 1.5; 
+            // Ajuste para que la vista sea cómoda al sostener el móvil frente a la cara
+            // El ángulo 60-70 suele ser el natural en visores
+            cameraPitch = (e.beta - 65) * sensitivityV; 
         }
     }
 }, true);
@@ -88,20 +88,20 @@ function initGameElements() {
 
     const sideMargin = vw * 0.2;
 
-    // 1. BARRA DE INVENTARIO (Arriba en el cielo virtual)
+    // 1. BARRA DE INVENTARIO (Cielo virtual)
     invBox = {
         x: sideMargin,
-        y: worldH * 0.25, 
+        y: worldH * 0.40, // Bajado para que no se "aplasten" contra el borde superior
         w: worldW - (sideMargin * 2),
-        h: 200 // Espacio generoso para planetas grandes
+        h: 220 
     };
 
-    // 2. SISTEMA SOLAR (Abajo en el horizonte)
+    // 2. SISTEMA SOLAR (Abajo - Horizonte)
     sysBox = {
         x: sideMargin,
-        y: worldH * 0.55,
+        y: worldH * 0.58, // Un poco debajo del centro
         w: worldW - (sideMargin * 2),
-        h: worldH * 0.4
+        h: worldH * 0.3
     };
 
     // Distribución en ARCO ENVOLVENTE (Abajo)
@@ -271,11 +271,18 @@ function drawScene(eye) {
     // Feedback Mano
     if (HAND_DETECTED) {
         canvasCtx.fillStyle = IS_PINCHING ? "#00ff00" : "white";
-        canvasCtx.font = "bold 10px Arial";
-        canvasCtx.fillText(IS_PINCHING ? "AGARRANDO" : "MANO", 10, vh - 10);
+        canvasCtx.font = "bold 12px Arial";
+        canvasCtx.fillText(IS_PINCHING ? "✊ AGARRANDO" : "✋ MANO", 20, vh - 20);
     }
-    canvasCtx.restore();
+    
+    // Línea de separación (Vertical suave)
+    canvasCtx.strokeStyle = "rgba(255,255,255,0.1)";
+    canvasCtx.lineWidth = 1;
+    canvasCtx.beginPath();
+    canvasCtx.moveTo(0, 0); canvasCtx.lineTo(0, vh);
+    canvasCtx.stroke();
 
+    canvasCtx.restore();
     canvasCtx.restore();
 }
 
