@@ -90,8 +90,8 @@ function initGameElements() {
     const inFS = !!document.fullscreenElement;
     if (!isPC) {
         // Un poco más de margen incluso en pantalla completa para que no se pegue al borde curvo
-        const fsPaddingX = inFS ? 15 : padding;
-        const fsPaddingY = inFS ? 15 : padding;
+        const fsPaddingX = inFS ? 25 : padding;
+        const fsPaddingY = inFS ? 25 : padding;
         fsBtn.x = width - fsPaddingX - 50;
         fsBtn.y = inFS ? height - fsPaddingY - 50 : height - padding - 85;
     } else {
@@ -545,10 +545,14 @@ function drawGameElements() {
         let ly;
 
         if (zone.id === "mercurio") {
-            ly = zone.y + labelOffset + 12; // Reducido de 22 a 12 para que no esté tan separado
+            ly = zone.y + labelOffset + 4; // Mucho más junto
+        } else if (zone.id === "tierra") {
+            ly = (relY > 0.5) ? zone.y - labelOffset + 2 : zone.y + labelOffset + 5; // Más pegado
+        } else if (zone.type === "saturn") {
+            ly = (relY > 0.5) ? zone.y - labelOffset + 5 : zone.y + labelOffset + 4; // Más pegado (ajustado por sus anillos)
         } else if (zone.type === "belt") {
-            ly = zone.y + (zone.h / 2) - 30; // En la parte de abajo sobre la imagen
-            canvasCtx.font = isPCGlobal ? "bold 18px Arial" : "bold 15px Arial"; // Más grande y bold
+            ly = zone.y + (zone.h / 2) - 10; // Bajado (de -30 a -10) para que esté más cerca del borde inferior del cinturón
+            canvasCtx.font = isPCGlobal ? "bold 18px Arial" : "bold 15px Arial";
         } else {
             ly = (relY > 0.5) ? zone.y - labelOffset - 5 : zone.y + labelOffset + 15;
         }
