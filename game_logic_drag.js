@@ -69,43 +69,47 @@ function initGameElements() {
 
     const width = window.innerWidth;
     const height = window.innerHeight;
+    const isPC = width > 1024;
 
-    // 1. BOTONES (Esquinas superiores)
+    // 1. BOTONES (Esquinas superiores con margen)
+    const padding = isPC ? 30 : 15;
     backBtn.w = 50; backBtn.h = 50;
-    backBtn.x = 20; backBtn.y = 10;
+    backBtn.x = padding; backBtn.y = padding;
 
     restartBtn.w = 50; restartBtn.h = 50;
-    restartBtn.x = width - 70; restartBtn.y = 10;
+    restartBtn.x = width - padding - 50; restartBtn.y = padding;
 
     // 2. CAJA INVENTARIO (Panel superior)
+    // Más alta en PC, más margen lateral
+    const sideMargin = width * 0.08;
     invBox = {
-        x: 80, 
-        y: 10,
-        w: width - 160,
-        h: Math.min(height * 0.25, 120)
+        x: sideMargin, 
+        y: padding,
+        w: width - (sideMargin * 2),
+        h: isPC ? height * 0.20 : Math.min(height * 0.22, 110)
     };
 
     // 3. CAJA SISTEMA (Panel inferior)
     sysBox = {
-        x: 20,
-        y: invBox.y + invBox.h + 30,
-        w: width - 40,
-        h: height - (invBox.y + invBox.h + 40)
+        x: sideMargin,
+        y: invBox.y + invBox.h + (isPC ? 60 : 30),
+        w: width - (sideMargin * 2),
+        h: height - (invBox.y + invBox.h + (isPC ? 100 : 50))
     };
 
     // --- 4. ZONAS DESTINO (Dentro de sysBox) ---
     const sysCenterY = sysBox.y + (sysBox.h / 2);
-    // Distribución horizontal proporcional
-    const positionsPct = [0.08, 0.18, 0.26, 0.33, 0.40, 0.50, 0.65, 0.78, 0.89, 0.96];
+    // Distribución horizontal proporcional (Sol más centrado si es PC)
+    const positionsPct = [0.05, 0.16, 0.24, 0.32, 0.40, 0.52, 0.68, 0.82, 0.91, 0.98];
 
     solarSystemData.forEach((data, index) => {
         let distinctX = sysBox.x + (sysBox.w * positionsPct[index]);
         let distinctY = sysCenterY;
         
-        // Zigzag solo si hay altura suficiente
-        if (data.type !== "belt" && data.type !== "star" && sysBox.h > 250) {
-            const zigzag = sysBox.h * 0.15;
-            distinctY = (index % 2 !== 0) ? sysCenterY + zigzag : sysCenterY - zigzag;
+        // Zigzag más pronunciado en PC
+        if (data.type !== "belt" && data.type !== "star" && sysBox.h > 200) {
+            const zigzagAmt = isPC ? sysBox.h * 0.20 : sysBox.h * 0.15;
+            distinctY = (index % 2 !== 0) ? sysCenterY + zigzagAmt : sysCenterY - zigzagAmt;
         }
 
         let zoneObj = {
@@ -115,14 +119,16 @@ function initGameElements() {
             color: data.color.replace(")", ", 0.2)").replace("rgb", "rgba").replace("#", "#"),
             x: distinctX,
             y: distinctY,
-            type: data.type
+            type: data.type,
+            originalR: data.r // Guardar radio original
         };
 
-        if (data.type === "star") zoneObj.r = Math.min(60, sysBox.h * 0.3);
+        const sizeFactor = isPC ? 1.2 : 1.0;
+        if (data.type === "star") zoneObj.r = Math.min(70 * sizeFactor, sysBox.h * 0.35);
         else if (data.type === "belt") {
-            zoneObj.w = Math.min(60, sysBox.w * 0.05);
-            zoneObj.h = sysBox.h * 0.8;
-            for (let i = 0; i < 30; i++) {
+            zoneObj.w = Math.min(60 * sizeFactor, sysBox.w * 0.06);
+            zoneObj.h = sysBox.h * 0.85;
+            for (let i = 0; i < 40; i++) {
                 asteroidParticles.push({
                     x: distinctX + (Math.random() - 0.5) * zoneObj.w,
                     y: sysCenterY + (Math.random() - 0.5) * zoneObj.h,
@@ -130,10 +136,10 @@ function initGameElements() {
                 });
             }
         } else if (data.type === "saturn") {
-            zoneObj.r = Math.min(35, sysBox.h * 0.15);
+            zoneObj.r = Math.min(45 * sizeFactor, sysBox.h * 0.18);
             zoneObj.ringR = zoneObj.r * 2.2;
         } else {
-            zoneObj.r = Math.min(data.r + 5, sysBox.h * 0.15);
+            zoneObj.r = Math.min((data.r + 5) * sizeFactor, sysBox.h * 0.18);
         }
 
         zones.push(zoneObj);
@@ -142,8 +148,7 @@ function initGameElements() {
     // --- 5. INVENTARIO (Dentro de invBox) ---
     let shuffledData = [...solarSystemData].sort(() => Math.random() - 0.5);
     shuffledData.forEach((data, i) => {
-        // Calcular posición en rejilla para evitar solapamientos iniciales
-        const cols = 5;
+        const cols = isPC ? 5 : 5;
         const colW = invBox.w / cols;
         const rowH = invBox.h / 2;
         const col = i % cols;
@@ -152,6 +157,7 @@ function initGameElements() {
         let posX = invBox.x + (col * colW) + (colW / 2);
         let posY = invBox.y + (row * rowH) + (rowH / 2);
 
+        // Los planetas en inventario son un poco más pequeños pero crecen al soltarse
         let planetObj = {
             id: data.id,
             name: data.name,
@@ -161,9 +167,10 @@ function initGameElements() {
             type: data.type,
             isDragging: false,
             isLocked: false,
-            r: data.r * 0.7, // Escala reducida en inventario
-            w: data.w * 0.7,
-            h: data.h * 0.7,
+            targetR: data.r * (isPC ? 1.2 : 1.0), // El tamaño que debe tener en el sistema
+            r: data.r * 0.6, // Tamaño inicial en inventario
+            w: (data.w || 40) * 0.6,
+            h: (data.h || 80) * 0.6,
             originalX: posX, 
             originalY: posY
         };
@@ -303,11 +310,14 @@ function checkDrop(planet) {
             planet.x = landedZone.x;
             planet.y = landedZone.y;
             planet.isLocked = true;
-
+            
+            // Crecer al tamaño de la zona
+            planet.r = landedZone.type === "star" ? landedZone.r : (landedZone.r - 5);
             if (planet.type === "belt") {
                 planet.w = landedZone.w;
                 planet.h = landedZone.h;
             }
+            if (planet.type === "saturn") planet.r = landedZone.r;
 
             // Verificar Victoria
             if (planets.every(p => p.isLocked)) {
