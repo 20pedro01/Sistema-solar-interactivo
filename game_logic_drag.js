@@ -89,9 +89,9 @@ function initGameElements() {
 
     const inFS = !!document.fullscreenElement;
     if (!isPC) {
-        // En pantalla completa, pegarlo más a la absoluta esquina
-        const fsPaddingX = inFS ? 5 : padding;
-        const fsPaddingY = inFS ? 5 : padding;
+        // Un poco más de margen incluso en pantalla completa para que no se pegue al borde curvo
+        const fsPaddingX = inFS ? 15 : padding;
+        const fsPaddingY = inFS ? 15 : padding;
         fsBtn.x = width - fsPaddingX - 50;
         fsBtn.y = inFS ? height - fsPaddingY - 50 : height - padding - 85;
     } else {
@@ -476,11 +476,7 @@ function drawGameElements() {
         canvasCtx.stroke();
     }
 
-    // Texto Instrucción 
-    canvasCtx.fillStyle = "white";
-    canvasCtx.font = isPCGlobal ? "bold 22px Arial" : "bold 16px Arial";
-    canvasCtx.textAlign = "center";
-    canvasCtx.fillText("Arrastra los planetas a su posición", canvasElement.width / 2, 35);
+    // Texto Instrucción (Se moverá al final para que no quede debajo de los planetas)
 
     // Caja Inventario (Borde sutil)
     canvasCtx.strokeStyle = "rgba(0, 255, 255, 0.2)";
@@ -549,7 +545,7 @@ function drawGameElements() {
         let ly;
 
         if (zone.id === "mercurio") {
-            ly = zone.y + labelOffset + 22; // Forzar abajo Mercurio (más espacio para Venus)
+            ly = zone.y + labelOffset + 12; // Reducido de 22 a 12 para que no esté tan separado
         } else if (zone.type === "belt") {
             ly = zone.y + (zone.h / 2) - 30; // En la parte de abajo sobre la imagen
             canvasCtx.font = isPCGlobal ? "bold 18px Arial" : "bold 15px Arial"; // Más grande y bold
@@ -623,6 +619,17 @@ function drawGameElements() {
         }
         canvasCtx.restore();
     }
+
+    // DIBUJAR TEXTO INSTRUCCIÓN AL FINAL (Para que esté por encima de todo)
+    canvasCtx.save();
+    canvasCtx.fillStyle = "white";
+    canvasCtx.font = isPCGlobal ? "bold 22px Arial" : "bold 16px Arial";
+    canvasCtx.textAlign = "center";
+    canvasCtx.shadowColor = "black";
+    canvasCtx.shadowBlur = 4;
+    // Subirlo un poco más en PC, dejar en 30 para móvil
+    canvasCtx.fillText("Arrastra los planetas a su posición", canvasElement.width / 2, isPCGlobal ? 35 : 30);
+    canvasCtx.restore();
 }
 
 function loop() {
