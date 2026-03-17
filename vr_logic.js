@@ -70,15 +70,14 @@ const restartBtn = { x: 0, y: 0, w: 50, h: 50 };
 
 // --- INICIALIZACIÓN ---
 function initGameElements() {
-    // En VR, dividimos el ancho entre 2 para los ojos
     const totalW = window.innerWidth;
     const totalH = window.innerHeight;
     const vw = totalW / 2; 
     const vh = totalH;
 
-    // Mundo Esférico (Panorámico H y V)
-    worldW = vw * 4; 
-    worldH = vh * 3; // Mucho más alto para permitir mirar arriba y abajo
+    // Mundo Panorámico 360 (Muy ancho para dar la vuelta completa)
+    worldW = vw * 8; 
+    worldH = vh * 2.5; 
 
     canvasElement.width = totalW;
     canvasElement.height = totalH;
@@ -87,40 +86,38 @@ function initGameElements() {
     zones = [];
     isGameWon = false;
 
-    const sideMargin = vw * 0.1;
+    const sideMargin = vw * 0.2;
 
-    // Caja de Inventario (Flotando arriba en el "cielo" virtual)
+    // 1. BARRA DE INVENTARIO (Arriba en el cielo virtual)
     invBox = {
         x: sideMargin,
-        y: worldH * 0.2, 
+        y: worldH * 0.25, 
         w: worldW - (sideMargin * 2),
-        h: 150
+        h: 200 // Espacio generoso para planetas grandes
     };
 
-    // Caja de Sistema (Centro del mundo)
+    // 2. SISTEMA SOLAR (Abajo en el horizonte)
     sysBox = {
         x: sideMargin,
-        y: worldH * 0.4,
+        y: worldH * 0.55,
         w: worldW - (sideMargin * 2),
-        h: worldH * 0.5
+        h: worldH * 0.4
     };
 
-    // Distribución en ESFERA ENVOLVENTE (Usa ancho y alto)
+    // Distribución en ARCO ENVOLVENTE (Abajo)
     const count = solarSystemData.length;
     const sysCenterX = sysBox.x + (sysBox.w / 2);
-    const sysCenterY = sysBox.y + (sysBox.h / 2);
+    const sysCenterY = sysBox.y + (sysBox.h / 0.8); // Punto focal abajo para curva
     
-    const radiusX = sysBox.w * 0.4;
-    const radiusY = sysBox.h * 0.35;
+    const radiusX = sysBox.w * 0.45;
+    const radiusY = sysBox.h * 1.2;
 
     solarSystemData.forEach((data, index) => {
-        // Ángulo horizontal
-        const angleH = Math.PI * (0.05 + (index / (count - 1)) * 0.9);
-        // Desviación vertical (algunos más arriba, otros más abajo)
-        const vShift = (index % 3 - 1) * (sysBox.h * 0.15);
+        // Ángulo de distribución a lo largo de los 360° (o gran parte)
+        const angleH = Math.PI * (0.1 + (index / (count - 1)) * 0.8);
         
         let distinctX = sysCenterX - Math.cos(angleH) * radiusX;
-        let distinctY = sysCenterY - Math.sin(angleH) * radiusY + vShift;
+        let distinctY = sysCenterY - Math.sin(angleH) * radiusY;
 
         let zoneObj = {
             id: data.id,
@@ -133,13 +130,13 @@ function initGameElements() {
             originalR: data.r
         };
 
-        const sizeFactor = 1.6;
-        if (data.type === "star") zoneObj.r = 130;
+        const sizeFactor = 1.7;
+        if (data.type === "star") zoneObj.r = 140;
         else if (data.type === "belt") {
-            zoneObj.w = 110;
-            zoneObj.h = 260;
+            zoneObj.w = 120;
+            zoneObj.h = 280;
         } else if (data.type === "saturn") {
-            zoneObj.r = 90;
+            zoneObj.r = 100;
         } else {
             zoneObj.r = (data.r + 5) * sizeFactor;
         }
@@ -147,14 +144,18 @@ function initGameElements() {
         zones.push(zoneObj);
     });
 
-    // Inventario (Distribuido a lo alto y ancho)
-    let shuffledData = [...solarSystemData].sort(() => Math.random() - 0.5);
+    // 3. INVENTARIO (Arriba - Fila única panorámica)
+    const shuffledData = [...solarSystemData].sort(() => Math.random() - 0.5);
+    const invCount = shuffledData.length;
+    const invCenterX = invBox.x + (invBox.w / 2);
+    const invRadiusX = invBox.w * 0.45;
+
     shuffledData.forEach((data, i) => {
-        const colW = invBox.w / 11;
-        let posX = invBox.x + (i * colW) + (colW / 2);
+        const angleH = Math.PI * (0.1 + (i / (invCount - 1)) * 0.8);
+        let posX = invCenterX - Math.cos(angleH) * invRadiusX;
         let posY = invBox.y + (invBox.h / 2);
 
-        const invScale = 0.95;
+        const invScale = 1.0; 
         let planetObj = {
             id: data.id, name: data.name, color: data.color,
             x: posX, y: posY, type: data.type,
