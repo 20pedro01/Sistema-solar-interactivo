@@ -106,19 +106,17 @@ function initGameElements() {
     restartBtn.w = 50; restartBtn.h = 50;
     fsBtn.w = 50; fsBtn.h = 50;
 
-    // Distribución en SEMICÍRCULO
+    // Distribución en SEMICÍRCULO ENVOLVENTE
     const count = solarSystemData.length;
     const sysCenterX = sysBox.x + (sysBox.w / 2);
-    const sysCenterY = sysBox.y + (sysBox.h * 0.6);
+    const sysCenterY = vh * 0.7; // Bajado para dar sensación de cercanía
     
-    // Radio del semicírculo
-    const radiusX = sysBox.w / 2.2;
-    const radiusY = sysBox.h * 0.35;
+    // Radio del semicírculo (Ajustado para que se sientan a tu alrededor)
+    const radiusX = sysBox.w / 2.5;
+    const radiusY = vh * 0.45;
 
     solarSystemData.forEach((data, index) => {
-        // Ángulo de -PI a 0 para formar un arco superior (o de 0 a PI para inferior)
-        // Usaremos de 0.2 a 0.8 de PI para que no queden muy en los bordes verticales
-        const angle = Math.PI * (0.1 + (index / (count - 1)) * 0.8);
+        const angle = Math.PI * (0.05 + (index / (count - 1)) * 0.9);
         
         let distinctX = sysCenterX - Math.cos(angle) * radiusX;
         let distinctY = sysCenterY - Math.sin(angle) * radiusY;
@@ -134,13 +132,13 @@ function initGameElements() {
             originalR: data.r
         };
 
-        const sizeFactor = 0.6; 
-        if (data.type === "star") zoneObj.r = 45;
+        const sizeFactor = 1.6; // AUMENTADO de 0.6 para que se vean CERCA
+        if (data.type === "star") zoneObj.r = 120;
         else if (data.type === "belt") {
-            zoneObj.w = 40;
-            zoneObj.h = 100;
+            zoneObj.w = 100;
+            zoneObj.h = 240;
         } else if (data.type === "saturn") {
-            zoneObj.r = 30;
+            zoneObj.r = 80;
         } else {
             zoneObj.r = (data.r + 5) * sizeFactor;
         }
@@ -148,14 +146,14 @@ function initGameElements() {
         zones.push(zoneObj);
     });
 
-    // Inventario (Distribuido a lo largo del mundo panorámico)
+    // Inventario (Distribuido – PLANETAS GRANDES)
     let shuffledData = [...solarSystemData].sort(() => Math.random() - 0.5);
     shuffledData.forEach((data, i) => {
-        const colW = invBox.w / 10;
+        const colW = invBox.w / 11;
         let posX = invBox.x + (i * colW) + (colW / 2);
         let posY = invBox.y + (invBox.h / 2);
 
-        const invScale = 0.35;
+        const invScale = 0.95; // AUMENTADO de 0.35
         let planetObj = {
             id: data.id, name: data.name, color: data.color,
             x: posX, y: posY, type: data.type,
@@ -194,23 +192,32 @@ function drawScene(eye) {
     canvasCtx.strokeStyle = "rgba(0, 255, 255, 0.1)";
     canvasCtx.strokeRect(invBox.x, invBox.y, invBox.w, invBox.h);
 
-    // 2. Zonas (Semicírculo)
+    // 2. Zonas (Semicírculo Envolvente)
     zones.forEach(zone => {
         canvasCtx.save();
         canvasCtx.strokeStyle = zone.baseColor;
-        canvasCtx.setLineDash([3, 3]);
+        canvasCtx.lineWidth = 2; // Más gruesa para visibilidad
+        canvasCtx.setLineDash([5, 5]);
         const img = planetImages[zone.id];
         if (img && img.complete) {
-            canvasCtx.globalAlpha = 0.2;
+            canvasCtx.globalAlpha = 0.25;
             if (zone.type === "belt") {
                 canvasCtx.drawImage(img, zone.x - zone.w / 2, zone.y - zone.h / 2, zone.w, zone.h);
             } else if (zone.type === "saturn") {
-                let satW = zone.r * 4; let satH = zone.r * 2.2;
+                let satW = zone.r * 4.5; let satH = zone.r * 2.5; // Tamaño original de Saturno
                 canvasCtx.drawImage(img, zone.x - satW / 2, zone.y - satH / 2, satW, satH);
             } else {
                 canvasCtx.drawImage(img, zone.x - zone.r, zone.y - zone.r, zone.r * 2, zone.r * 2);
             }
         }
+        
+        // Nombres de zonas más grandes en VR
+        canvasCtx.globalAlpha = 1.0;
+        canvasCtx.fillStyle = "white";
+        canvasCtx.font = "bold 15px Arial";
+        canvasCtx.textAlign = "center";
+        canvasCtx.fillText(zone.name, zone.x, zone.y + zone.r + 30);
+        
         canvasCtx.restore();
     });
 
@@ -222,7 +229,7 @@ function drawScene(eye) {
             if (p.type === "belt") {
                 canvasCtx.drawImage(img, p.x - p.w / 2, p.y - p.h / 2, p.w, p.h);
             } else if (p.type === "saturn") {
-                let satW = p.r * 4; let satH = p.r * 2.2;
+                let satW = p.r * 4.5; let satH = p.r * 2.5;
                 canvasCtx.drawImage(img, p.x - satW / 2, p.y - satH / 2, satW, satH);
             } else {
                 canvasCtx.drawImage(img, p.x - p.r, p.y - p.r, p.r * 2, p.r * 2);
@@ -391,11 +398,12 @@ function checkDrop(planet) {
     let landedZone = zones.find(z => z.id === planet.id);
     if (landedZone) {
         const d = getDist(planet.x, planet.y, landedZone.x, landedZone.y);
-        if (d < 50) { // Umbral VR
+        if (d < 100) { // Umbral VR más amplio por el tamaño
             planet.x = landedZone.x;
             planet.y = landedZone.y;
             planet.isLocked = true;
-            planet.r = landedZone.originalR * 0.6;
+            // El planeta se queda con el tamaño grande de la zona
+            planet.r = landedZone.r;
             if (planets.every(p => p.isLocked)) {
                 isGameWon = true; // Simple win en VR por ahora
             }
