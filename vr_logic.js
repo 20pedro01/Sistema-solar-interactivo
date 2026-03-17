@@ -13,11 +13,10 @@ let rocketX = 0, rocketY = 0, rocketAngle = 0;
 let asteroidParticles = [];
 let isFullscreen = false;
 
-// Estado de manos
+// Estado de manos / Gaze
 let IS_PINCHING = false;
-let cursorX = 0, cursorY = 0;
 let selectedPlanet = null;
-let dragOffset = { x: 0, y: 0 };
+let gazeTarget = null; // Planeta al que se está mirando
 
 // Cargar Imágenes
 const rocketImg = new Image();
@@ -223,14 +222,26 @@ function drawScene(eye) {
         canvasCtx.restore();
     });
 
-    // 5. Cursor / Indicador de mano
+    // 5. Retícula de mirada (Gaze Reticle)
+    canvasCtx.beginPath();
+    canvasCtx.arc(vw / 2, vh / 2, 5, 0, Math.PI * 2);
+    canvasCtx.strokeStyle = "white";
+    canvasCtx.lineWidth = 2;
+    canvasCtx.stroke();
+    
+    // Círculo exterior que se ilumina si hay algo seleccionado
+    canvasCtx.beginPath();
+    canvasCtx.arc(vw / 2, vh / 2, 15, 0, Math.PI * 2);
+    canvasCtx.strokeStyle = gazeTarget || selectedPlanet ? "#00ff00" : "rgba(255,255,255,0.3)";
+    canvasCtx.lineWidth = 1;
+    canvasCtx.stroke();
+
+    // 6. Indicador de gesto detectado (en una esquina para feedback)
     if (HAND_DETECTED) {
-        canvasCtx.beginPath();
-        canvasCtx.arc(cursorX, cursorY, IS_PINCHING ? 8 : 12, 0, Math.PI * 2);
-        canvasCtx.fillStyle = IS_PINCHING ? "#00ff00" : "rgba(255,255,255,0.5)";
-        canvasCtx.fill();
-        canvasCtx.strokeStyle = "white";
-        canvasCtx.stroke();
+        canvasCtx.fillStyle = IS_PINCHING ? "#00ff00" : "rgba(255,255,255,0.2)";
+        canvasCtx.font = "bold 10px Arial";
+        canvasCtx.textAlign = "left";
+        canvasCtx.fillText(IS_PINCHING ? "MANO: AGARRANDO" : "MANO: DETECTADA", 10, vh - 20);
     }
 
     // Texto Instrucción (Reducido)
@@ -262,25 +273,19 @@ function onResults(results) {
         HAND_DETECTED = true;
         const landmarks = results.multiHandLandmarks[0];
         
-        // MediaPipe X es invertido para cámara trasera? 
-        // No, la cámara trasera no es reflejada, así que X=0 es izquierda.
         const tipX = landmarks[8].x;
         const tipY = landmarks[8].y;
         const thumbX = landmarks[4].x;
         const thumbY = landmarks[4].y;
 
-        // Mapear a coordenadas virtuales (ojo izquierdo)
-        cursorX = tipX * vw;
-        cursorY = tipY * vh;
-
         // Detección de pinza
         const dist = Math.sqrt(Math.pow(tipX - thumbX, 2) + Math.pow(tipY - thumbY, 2));
         const wasPinching = IS_PINCHING;
-        IS_PINCHING = dist < 0.06;
+        IS_PINCHING = dist < 0.08; // Umbral un poco más permisivo para VR
 
-        updateGameLogic(cursorX, cursorY, IS_PINCHING, wasPinching);
+        updateGameLogic(IS_PINCHING, wasPinching);
         
-        statusText.style.opacity = "0"; // Ocultar HUD una vez detectado
+        statusText.style.opacity = "0"; 
     } else {
         HAND_DETECTED = false;
         if (selectedPlanet) {
@@ -291,50 +296,61 @@ function onResults(results) {
     }
 }
 
-function updateGameLogic(x, y, pinching, wasPinching) {
+function updateGameLogic(pinching, wasPinching) {
     if (isGameWon) return;
 
-    // Gestos sobre botones (Pellizco corto)
-    if (pinching && !wasPinching) {
-        // Botón FS via gesto
-        if (getDist(x, y, fsBtn.x + 25, fsBtn.y + 25) < 30) {
-            toggleFullscreen();
-            return;
-        }
-        // Botón Reiniciar
-        if (getDist(x, y, restartBtn.x + 25, restartBtn.y + 25) < 30) {
-            initGameElements();
-            return;
-        }
-        // Botón Volver
-        if (getDist(x, y, backBtn.x + 25, backBtn.y + 25) < 30) {
-            window.location.href = 'index.html';
-            return;
+    const vw = canvasElement.width / 2;
+    const vh = canvasElement.height;
+    const centerX = vw / 2;
+    const centerY = vh / 2;
+
+    // 1. Detectar qué hay bajo la retícula (Gaze Target)
+    if (!selectedPlanet) {
+        gazeTarget = null;
+        // Priorizar planetas no bloqueados
+        for (let i = planets.length - 1; i >= 0; i--) {
+            const p = planets[i];
+            if (p.isLocked) continue;
+            // Usamos un área de selección generosa para el centro de la mirada
+            if (isInside(centerX, centerY, p)) {
+                gazeTarget = p;
+                break;
+            }
         }
     }
 
+    // 2. Lógica de Agarrar (Pinch)
     if (pinching) {
-        if (!selectedPlanet) {
-            for (let i = planets.length - 1; i >= 0; i--) {
-                const p = planets[i];
-                if (p.isLocked) continue;
-                if (isInside(x, y, p)) {
-                    selectedPlanet = p;
-                    selectedPlanet.isDragging = true;
-                    dragOffset.x = x - p.x;
-                    dragOffset.y = y - p.y;
-                    break;
-                }
-            }
-        } else {
-            selectedPlanet.x = x - dragOffset.x;
-            selectedPlanet.y = y - dragOffset.y;
+        if (!selectedPlanet && gazeTarget) {
+            // Empezar a arrastrar lo que estamos mirando
+            selectedPlanet = gazeTarget;
+            selectedPlanet.isDragging = true;
+        }
+
+        if (selectedPlanet) {
+            // El planeta se queda "pegado" al centro de nuestra mirada
+            selectedPlanet.x = centerX;
+            selectedPlanet.y = centerY;
         }
     } else {
+        // Soltar
         if (selectedPlanet) {
             selectedPlanet.isDragging = false;
             checkDrop(selectedPlanet);
             selectedPlanet = null;
+        }
+    }
+
+    // Gestos sobre botones (si la mirada está sobre ellos)
+    if (pinching && !wasPinching) {
+        if (getDist(centerX, centerY, fsBtn.x + 25, fsBtn.y + 25) < 40) {
+            toggleFullscreen();
+        }
+        if (getDist(centerX, centerY, restartBtn.x + 25, restartBtn.y + 25) < 40) {
+            initGameElements();
+        }
+        if (getDist(centerX, centerY, backBtn.x + 25, backBtn.y + 25) < 40) {
+            window.location.href = 'index.html';
         }
     }
 }
