@@ -100,31 +100,31 @@ function initGameElements() {
         x: sideMargin, 
         y: padding,
         w: width - (sideMargin * 2),
-        h: isPC ? height * 0.18 : Math.min(height * 0.28, 130)
+        h: isPC ? height * 0.18 : Math.min(height * 0.30, 140) // Un poco más alto para separar del texto
     };
 
     // 3. CAJA SISTEMA (Panel inferior)
     sysBox = {
         x: sideMargin,
-        y: invBox.y + invBox.h + (isPC ? 40 : 10),
+        y: invBox.y + invBox.h + (isPC ? 40 : 5), // Reducido para dar más aire interno
         w: width - (sideMargin * 2),
-        h: height - (invBox.y + invBox.h + (isPC ? 80 : 35))
+        h: height - (invBox.y + invBox.h + (isPC ? 80 : 25))
     };
 
     // --- 4. ZONAS DESTINO (Dentro de sysBox) ---
     const sysCenterY = sysBox.y + (sysBox.h / 2);
-    // Distribución horizontal: Espaciar más los últimos planetas
+    // Distribución horizontal: Espaciar más los últimos planetas y corregir Júpiter
     const positionsPct = isPC 
         ? [0.05, 0.15, 0.23, 0.31, 0.38, 0.48, 0.62, 0.77, 0.89, 0.98]
-        : [0.04, 0.13, 0.20, 0.27, 0.34, 0.45, 0.61, 0.76, 0.88, 0.98]; // Ajustado para móviles
+        : [0.05, 0.14, 0.21, 0.28, 0.35, 0.46, 0.56, 0.76, 0.88, 0.98]; // Júpiter (0.56) más cerca del cinturón
 
     solarSystemData.forEach((data, index) => {
         let distinctX = sysBox.x + (sysBox.w * positionsPct[index]);
         let distinctY = sysCenterY;
         
-        // Zigzag (Sol también puede oscilar un poco para dejar espacio al texto)
+        // Zigzag (Aumentar para móviles con pantalla pequeña)
         if (data.type !== "belt") {
-            const zigzagAmt = isPC ? sysBox.h * 0.20 : sysBox.h * 0.15;
+            const zigzagAmt = isPC ? sysBox.h * 0.20 : sysBox.h * 0.18;
             distinctY = (index % 2 !== 0) ? sysCenterY + zigzagAmt : sysCenterY - zigzagAmt;
         }
 
