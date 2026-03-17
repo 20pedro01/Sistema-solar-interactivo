@@ -1,5 +1,5 @@
 // 1. CONFIGURACIÓN E IMPORTACIONES
-const canvasElement = document.getElementById('canvas-overlay'); 
+const canvasElement = document.getElementById('canvas-overlay');
 const canvasCtx = canvasElement.getContext('2d');
 
 // Inyectar librería de confeti dinámicamente
@@ -27,12 +27,12 @@ const restartBtn = { x: 0, y: 0, w: 50, h: 50 };
 
 // Intentar bloquear orientación en móviles
 if (screen.orientation && screen.orientation.lock) {
-    screen.orientation.lock('landscape').catch(e => {});
+    screen.orientation.lock('landscape').catch(e => { });
 }
 
 function toggleFullscreen() {
     if (!document.fullscreenElement) {
-        document.documentElement.requestFullscreen().catch(() => {});
+        document.documentElement.requestFullscreen().catch(() => { });
         isFullscreen = true;
     } else {
         if (document.exitFullscreen) {
@@ -52,7 +52,7 @@ const solarSystemData = [
     { id: "venus", name: "Venus", color: "#FFA500", r: 20, type: "circle", src: "Assets/Venus.svg" },
     { id: "tierra", name: "Tierra", color: "#1E90FF", r: 22, type: "circle", src: "Assets/Tierra.svg" },
     { id: "marte", name: "Marte", color: "#FF4500", r: 18, type: "circle", src: "Assets/Marte.svg" },
-    { id: "cinturon", name: "Cinturón", color: "#8B4513", w: 50, h: 180, type: "belt", src: "Assets/Cinturón.svg" },
+    { id: "cinturon", name: "Cinturón de asteroides", color: "#8B4513", w: 50, h: 180, type: "belt", src: "Assets/Cinturón.svg" },
     { id: "jupiter", name: "Júpiter", color: "#DEB887", r: 55, type: "circle", src: "Assets/Júpiter.svg" },
     { id: "saturno", name: "Saturno", color: "#F4C430", r: 45, type: "saturn", src: "Assets/Saturno.svg" },
     { id: "urano", name: "Urano", color: "#00FFFF", r: 35, type: "circle", src: "Assets/Urano.svg" },
@@ -70,7 +70,7 @@ solarSystemData.forEach(p => {
 function initGameElements() {
     canvasElement.width = window.innerWidth;
     canvasElement.height = window.innerHeight;
-    
+
     const width = window.innerWidth;
     const height = window.innerHeight;
     const isPC = width > 1024;
@@ -86,21 +86,25 @@ function initGameElements() {
     const padding = isPC ? 30 : 15;
     backBtn.x = padding; backBtn.y = padding;
     restartBtn.x = width - padding - 50; restartBtn.y = padding;
-    
+
+    const inFS = !!document.fullscreenElement;
     if (!isPC) {
-        fsBtn.x = width - padding - 50; 
-        fsBtn.y = height - padding - 95;
+        // En pantalla completa, pegarlo más a la absoluta esquina
+        const fsPaddingX = inFS ? 5 : padding;
+        const fsPaddingY = inFS ? 5 : padding;
+        fsBtn.x = width - fsPaddingX - 50;
+        fsBtn.y = inFS ? height - fsPaddingY - 50 : height - padding - 85;
     } else {
         fsBtn.x = -1000;
     }
 
     // 2. CAJA INVENTARIO (Panel superior)
-    const sideMargin = isPC ? width * 0.12 : width * 0.10; 
+    const sideMargin = isPC ? width * 0.12 : width * 0.10;
     invBox = {
-        x: sideMargin, 
+        x: sideMargin,
         y: padding,
         w: width - (sideMargin * 2),
-        h: isPC ? height * 0.18 : Math.min(height * 0.25, 110) // Reducido para móviles
+        h: isPC ? height * 0.18 : Math.min(height * 0.25, 110)
     };
 
     // 3. CAJA SISTEMA (Panel inferior)
@@ -108,20 +112,20 @@ function initGameElements() {
         x: sideMargin,
         y: invBox.y + invBox.h + (isPC ? 40 : 5), // Reducido para dar más aire interno
         w: width - (sideMargin * 2),
-        h: height - (invBox.y + invBox.h + (isPC ? 80 : 55)) // Aumentado margen inferior para móviles
+        h: height - (invBox.y + invBox.h + (isPC ? 80 : (inFS ? 20 : 55))) // Aumentado margen inferior para móviles
     };
 
     // --- 4. ZONAS DESTINO (Dentro de sysBox) ---
     const sysCenterY = sysBox.y + (sysBox.h / 2);
     // Distribución horizontal: Espaciar más los últimos planetas y corregir Júpiter
-    const positionsPct = isPC 
+    const positionsPct = isPC
         ? [0.05, 0.15, 0.23, 0.31, 0.38, 0.48, 0.62, 0.77, 0.89, 0.98]
         : [0.05, 0.14, 0.21, 0.28, 0.35, 0.46, 0.56, 0.76, 0.88, 0.98]; // Júpiter (0.56) más cerca del cinturón
 
     solarSystemData.forEach((data, index) => {
         let distinctX = sysBox.x + (sysBox.w * positionsPct[index]);
         let distinctY = sysCenterY;
-        
+
         // Zigzag (Aumentar para móviles con pantalla pequeña)
         if (data.type !== "belt") {
             const zigzagAmt = isPC ? sysBox.h * 0.20 : sysBox.h * 0.18;
@@ -136,7 +140,7 @@ function initGameElements() {
             x: distinctX,
             y: distinctY,
             type: data.type,
-            originalR: data.r 
+            originalR: data.r
         };
 
         const sizeFactor = isPC ? 1.2 : 0.70; // ESCALA GLOBAL REDUCIDA PARA MÓVIL (de 0.85 a 0.70)
@@ -173,7 +177,7 @@ function initGameElements() {
         let posY = invBox.y + (rowH / 2);
 
         // Escala reducida para que quepan bien en una fila
-        const invScale = isPC ? 0.8 : 0.52; 
+        const invScale = isPC ? 0.8 : 0.52;
         let planetObj = {
             id: data.id,
             name: data.name,
@@ -183,11 +187,11 @@ function initGameElements() {
             type: data.type,
             isDragging: false,
             isLocked: false,
-            targetR: data.r * (isPC ? 1.2 : 0.85), 
-            r: data.r * invScale, 
+            targetR: data.r * (isPC ? 1.2 : 0.85),
+            r: data.r * invScale,
             w: (data.w || 40) * (data.id === "saturno" ? invScale * 1.5 : invScale),
             h: (data.h || 80) * invScale,
-            originalX: posX, 
+            originalX: posX,
             originalY: posY
         };
         // Saturno en inventario ajustado para el nuevo tamaño
@@ -204,6 +208,7 @@ function resizeCanvas() {
     initGameElements();
 }
 window.addEventListener('resize', resizeCanvas);
+document.addEventListener('fullscreenchange', resizeCanvas);
 resizeCanvas(); // Start immediately
 
 function getDistance(x1, y1, x2, y2) {
@@ -242,7 +247,7 @@ function getPos(e) {
 function handleStart(e) {
     // Intentar bloquear orientación en el primer toque (requiere gesto del usuario)
     if (screen.orientation && screen.orientation.lock) {
-        screen.orientation.lock('landscape').catch(() => {});
+        screen.orientation.lock('landscape').catch(() => { });
     }
 
     if (isGameWon) {
@@ -301,7 +306,7 @@ function handleMove(e) {
 
 function handleEnd(e) {
     if (!selectedPlanet || !selectedPlanet.isDragging) return;
-    
+
     selectedPlanet.isDragging = false;
     checkDrop(selectedPlanet);
     selectedPlanet = null;
@@ -333,7 +338,7 @@ function checkDrop(planet) {
             planet.x = landedZone.x;
             planet.y = landedZone.y;
             planet.isLocked = true;
-            
+
             // Crecer al tamaño de la zona
             planet.r = landedZone.type === "star" ? landedZone.r : (landedZone.r - 5);
             if (planet.type === "belt") {
@@ -416,7 +421,7 @@ function drawGameElements() {
     canvasCtx.strokeStyle = "white";
     canvasCtx.lineWidth = 2;
     canvasCtx.stroke();
-    
+
     canvasCtx.fillStyle = "white";
     canvasCtx.beginPath();
     canvasCtx.moveTo(backBtn.x + 15, backBtn.y + 25);
@@ -432,7 +437,7 @@ function drawGameElements() {
     canvasCtx.fill();
     canvasCtx.strokeStyle = "white";
     canvasCtx.stroke();
-    
+
     canvasCtx.strokeStyle = "white";
     canvasCtx.beginPath();
     canvasCtx.arc(restartBtn.x + 25, restartBtn.y + 25, 12, 0.2, Math.PI * 1.8);
@@ -446,17 +451,28 @@ function drawGameElements() {
         canvasCtx.fill();
         canvasCtx.strokeStyle = "white";
         canvasCtx.stroke();
-        
-        // Icono corchetes
+
+        // Icono corchetes (Diferente si está en pantalla completa)
         canvasCtx.strokeStyle = "white";
         canvasCtx.lineWidth = 2;
         const s = 10;
         const x = fsBtn.x + 25, y = fsBtn.y + 25;
+        const inFS = !!document.fullscreenElement;
+
         canvasCtx.beginPath();
-        canvasCtx.moveTo(x - s, y - s + 5); canvasCtx.lineTo(x - s, y - s); canvasCtx.lineTo(x - s + 5, y - s);
-        canvasCtx.moveTo(x + s - 5, y - s); canvasCtx.lineTo(x + s, y - s); canvasCtx.lineTo(x + s, y - s + 5);
-        canvasCtx.moveTo(x + s, y + s - 5); canvasCtx.lineTo(x + s, y + s); canvasCtx.lineTo(x + s - 5, y + s);
-        canvasCtx.moveTo(x - s + 5, y + s); canvasCtx.lineTo(x - s, y + s); canvasCtx.lineTo(x - s, y + s - 5);
+        if (!inFS) {
+            // Entrar: Corchetes hacia afuera
+            canvasCtx.moveTo(x - s, y - s + 5); canvasCtx.lineTo(x - s, y - s); canvasCtx.lineTo(x - s + 5, y - s);
+            canvasCtx.moveTo(x + s - 5, y - s); canvasCtx.lineTo(x + s, y - s); canvasCtx.lineTo(x + s, y - s + 5);
+            canvasCtx.moveTo(x + s, y + s - 5); canvasCtx.lineTo(x + s, y + s); canvasCtx.lineTo(x + s - 5, y + s);
+            canvasCtx.moveTo(x - s + 5, y + s); canvasCtx.lineTo(x - s, y + s); canvasCtx.lineTo(x - s, y + s - 5);
+        } else {
+            // Salir: Corchetes hacia adentro
+            canvasCtx.moveTo(x - s, y - s + 5); canvasCtx.lineTo(x - s + 5, y - s + 5); canvasCtx.lineTo(x - s + 5, y - s);
+            canvasCtx.moveTo(x + s - 5, y - s); canvasCtx.lineTo(x + s - 5, y - s + 5); canvasCtx.lineTo(x + s, y - s + 5);
+            canvasCtx.moveTo(x + s, y + s - 5); canvasCtx.lineTo(x + s - 5, y + s - 5); canvasCtx.lineTo(x + s - 5, y + s);
+            canvasCtx.moveTo(x - s + 5, y + s); canvasCtx.lineTo(x - s + 5, y + s - 5); canvasCtx.lineTo(x - s, y + s - 5);
+        }
         canvasCtx.stroke();
     }
 
@@ -525,14 +541,24 @@ function drawGameElements() {
         canvasCtx.fillStyle = "rgba(255, 255, 255, 0.95)";
         canvasCtx.font = isPCGlobal ? "bold 16px Arial" : "bold 14px Arial";
         canvasCtx.textAlign = "center";
-        
+
         let labelOffset = (zone.type === "belt" ? zone.h / 2 : zone.r) + 12;
         if (zone.type === "saturn") labelOffset += 8;
-        
+
         const relY = (zone.y - sysBox.y) / sysBox.h;
-        let ly = (relY > 0.5) ? zone.y - labelOffset - 5 : zone.y + labelOffset + 15;
+        let ly;
+
+        if (zone.id === "mercurio") {
+            ly = zone.y + labelOffset + 22; // Forzar abajo Mercurio (más espacio para Venus)
+        } else if (zone.type === "belt") {
+            ly = zone.y + (zone.h / 2) - 30; // En la parte de abajo sobre la imagen
+            canvasCtx.font = isPCGlobal ? "bold 18px Arial" : "bold 15px Arial"; // Más grande y bold
+        } else {
+            ly = (relY > 0.5) ? zone.y - labelOffset - 5 : zone.y + labelOffset + 15;
+        }
+
         ly = Math.max(20, Math.min(canvasElement.height - 10, ly));
-        
+
         canvasCtx.fillText(zone.name, zone.x, ly);
         canvasCtx.restore();
     });
