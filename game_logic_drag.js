@@ -81,20 +81,20 @@ function initGameElements() {
 
     // 2. CAJA INVENTARIO (Panel superior)
     // Más alta en PC, más margen lateral
-    const sideMargin = width * 0.08;
+    const sideMargin = isPC ? width * 0.08 : width * 0.12; 
     invBox = {
         x: sideMargin, 
         y: padding,
         w: width - (sideMargin * 2),
-        h: isPC ? height * 0.20 : Math.min(height * 0.22, 110)
+        h: isPC ? height * 0.20 : Math.min(height * 0.20, 100)
     };
 
     // 3. CAJA SISTEMA (Panel inferior)
     sysBox = {
         x: sideMargin,
-        y: invBox.y + invBox.h + (isPC ? 60 : 30),
+        y: invBox.y + invBox.h + (isPC ? 60 : 25),
         w: width - (sideMargin * 2),
-        h: height - (invBox.y + invBox.h + (isPC ? 100 : 50))
+        h: height - (invBox.y + invBox.h + (isPC ? 100 : 45))
     };
 
     // --- 4. ZONAS DESTINO (Dentro de sysBox) ---
@@ -107,8 +107,8 @@ function initGameElements() {
         let distinctY = sysCenterY;
         
         // Zigzag más pronunciado en PC
-        if (data.type !== "belt" && data.type !== "star" && sysBox.h > 200) {
-            const zigzagAmt = isPC ? sysBox.h * 0.20 : sysBox.h * 0.15;
+        if (data.type !== "belt" && data.type !== "star" && sysBox.h > 180) {
+            const zigzagAmt = isPC ? sysBox.h * 0.20 : sysBox.h * 0.14;
             distinctY = (index % 2 !== 0) ? sysCenterY + zigzagAmt : sysCenterY - zigzagAmt;
         }
 
@@ -120,10 +120,10 @@ function initGameElements() {
             x: distinctX,
             y: distinctY,
             type: data.type,
-            originalR: data.r // Guardar radio original
+            originalR: data.r 
         };
 
-        const sizeFactor = isPC ? 1.2 : 1.0;
+        const sizeFactor = isPC ? 1.2 : 0.85; // SE ESCALA TODO HACIA ABAJO EN MÓVIL
         if (data.type === "star") zoneObj.r = Math.min(70 * sizeFactor, sysBox.h * 0.35);
         else if (data.type === "belt") {
             zoneObj.w = Math.min(60 * sizeFactor, sysBox.w * 0.06);
@@ -148,7 +148,7 @@ function initGameElements() {
     // --- 5. INVENTARIO (Dentro de invBox) ---
     let shuffledData = [...solarSystemData].sort(() => Math.random() - 0.5);
     shuffledData.forEach((data, i) => {
-        const cols = isPC ? 5 : 5;
+        const cols = 5;
         const colW = invBox.w / cols;
         const rowH = invBox.h / 2;
         const col = i % cols;
@@ -157,7 +157,7 @@ function initGameElements() {
         let posX = invBox.x + (col * colW) + (colW / 2);
         let posY = invBox.y + (row * rowH) + (rowH / 2);
 
-        // Los planetas en inventario son un poco más pequeños pero crecen al soltarse
+        const invScale = isPC ? 0.6 : 0.45; // ESCALA DE ELEMENTOS EN EL INVENTARIO
         let planetObj = {
             id: data.id,
             name: data.name,
@@ -167,10 +167,10 @@ function initGameElements() {
             type: data.type,
             isDragging: false,
             isLocked: false,
-            targetR: data.r * (isPC ? 1.2 : 1.0), // El tamaño que debe tener en el sistema
-            r: data.r * 0.6, // Tamaño inicial en inventario
-            w: (data.w || 40) * 0.6,
-            h: (data.h || 80) * 0.6,
+            targetR: data.r * (isPC ? 1.2 : 0.85), 
+            r: data.r * invScale, 
+            w: (data.w || 40) * invScale,
+            h: (data.h || 80) * invScale,
             originalX: posX, 
             originalY: posY
         };
@@ -468,13 +468,15 @@ function drawGameElements() {
         } else if (zone.type === "belt") {
             // No stroke
         } else if (zone.type === "saturn") {
-            // Contorno Saturno
+            // Contorno Saturno ajustado a la imagen
             canvasCtx.beginPath();
             const rot = Math.PI / 10;
-            canvasCtx.ellipse(zone.x + 10, zone.y - 1, zone.r * 1.5, zone.r * 0.8, rot, 3.8, 5.6);
-            canvasCtx.ellipse(zone.x, zone.y, zone.r * 2.8, zone.r * 0.5, rot, 5.6, 0.7);
-            canvasCtx.ellipse(zone.x - 6, zone.y - 2.5, zone.r * 1.5, zone.r * 0.8, rot, 0.7, 2.5);
-            canvasCtx.ellipse(zone.x, zone.y, zone.r * 2.8, zone.r * 0.5, rot, 2.5, 3.8);
+            const rX = zone.r * 2.2; // Reducido de 2.8 a 2.2 para ceñirse a la imagen
+            const rY = zone.r * 0.45;
+            canvasCtx.ellipse(zone.x + 8, zone.y - 1, zone.r * 1.2, zone.r * 0.7, rot, 3.8, 5.6);
+            canvasCtx.ellipse(zone.x, zone.y, rX, rY, rot, 5.6, 0.7);
+            canvasCtx.ellipse(zone.x - 4, zone.y - 2, zone.r * 1.2, zone.r * 0.7, rot, 0.7, 2.5);
+            canvasCtx.ellipse(zone.x, zone.y, rX, rY, rot, 2.5, 3.8);
             canvasCtx.closePath();
             canvasCtx.stroke();
         } else {
