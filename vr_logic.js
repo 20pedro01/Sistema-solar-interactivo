@@ -397,34 +397,33 @@ async function startCamera() {
     try {
         const constraints = {
             video: {
-                facingMode: { exact: "environment" },
+                facingMode: { ideal: "environment" },
                 width: { ideal: 1280 },
                 height: { ideal: 720 }
             }
         };
 
-        // Si falla con 'exact', intentamos sin exactitud por si el navegador es restrictivo
-        let stream;
-        try {
-            stream = await navigator.mediaDevices.getUserMedia(constraints);
-        } catch (e) {
-            console.log("Reintentando sin 'exact' para facingMode...");
-            stream = await navigator.mediaDevices.getUserMedia({
-                video: { facingMode: "environment" }
-            });
-        }
-
+        // Solicitar el stream manualmente para tener control TOTAL
+        const stream = await navigator.mediaDevices.getUserMedia(constraints);
         videoElement.srcObject = stream;
-        await videoElement.play();
         
-        const camera = new Camera(videoElement, {
-            onFrame: async () => {
-                await hands.send({ image: videoElement });
-            },
-            width: 1280,
-            height: 720
+        // Esperar a que el video esté listo para reproducirse
+        await new Promise((resolve) => {
+            videoElement.onloadedmetadata = () => {
+                videoElement.play().then(resolve);
+            };
         });
-        camera.start();
+
+        // Loop manual de procesamiento (reemplaza al helper 'Camera' de MediaPipe)
+        // Esto evita que MediaPipe reinicie la cámara con sus valores por defecto
+        async function process() {
+            if (!videoElement.paused && !videoElement.ended) {
+                await hands.send({ image: videoElement });
+            }
+            requestAnimationFrame(process);
+        }
+        process();
+
     } catch (err) {
         console.error("Error al acceder a la cámara:", err);
         statusText.innerText = "Error: Cámara trasera no accesible";
